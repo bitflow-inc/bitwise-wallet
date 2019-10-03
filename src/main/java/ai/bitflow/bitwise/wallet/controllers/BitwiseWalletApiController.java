@@ -39,6 +39,8 @@ public class BitwiseWalletApiController implements BlockchainConstant {
         return service.getDashboardData();
     }
 
+    // SettingRepository
+
     /**
      * AJAX API for Dashboard UI
      * @return

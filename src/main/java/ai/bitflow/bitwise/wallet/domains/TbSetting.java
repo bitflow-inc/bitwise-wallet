@@ -2,7 +2,6 @@ package ai.bitflow.bitwise.wallet.domains;
 
 
 import ai.bitflow.bitwise.wallet.domains.primarykeys.PkSymbolTestnet;
-import ai.bitflow.bitwise.wallet.domains.primarykeys.PkTxidCategoryToAddr;
 import lombok.Data;
 
 import javax.persistence.Entity;

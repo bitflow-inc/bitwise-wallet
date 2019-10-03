@@ -37,7 +37,7 @@
     .badge { font-weight: normal; }
     .ellipsis { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .btn-group>.btn:hover { background-color: rgb(159, 168, 218); }
-    .first-row .card { min-height: 260px; }
+    .first-row .card { min-height: 270px; }
     .container-fluid { padding: 15px 20px; }
     .card-body { padding: 0.4rem; min-height: 97px; }
 
@@ -47,18 +47,20 @@
     .navbar .btn { padding: 0; }
     .navbar-light .navbar-nav.nav-pills .nav-link.active { color: white; }
     .nav-pills .nav-link.active, .nav-pills .show>.nav-link { background-color: #43bedd; }
-    a.nav-link { padding: .2rem 1rem; font-size: 16px; color: rgba(0,0,0,0.5); }
-
+    a.nav-link { font-size: 16px; color: inherit; min-width: 62px; }
+    .btn-group .svg-inline--fa { font-size: 20px; }
+    .btn-link-ext { background-image: url(/img/ic-ext.png); background-size: 12px;
+      background-repeat: no-repeat; background-position: right 5px top 5px; }
     .table { margin-bottom: 0; }
-    .table th { font-size: 0.75rem; text-align: center; }
-    .table thead th { background-color: #c9ecf5;color: #444444; }
+    .table th { font-size: 0.75rem;color: #444444;text-align: center; }
+    .table thead th { background-color: #c9ecf5; }
     .table td { text-align: right; font-size: 0.66rem; max-width: 200px; }
     .table td.uid { overflow-x: hidden; }
 
     #errors td:first-child { color: #d50000; }
-    .form-inline .btn, .navbar-light .navbar-nav .nav-link { color: #666666; }
-    #chainName { font-size: 22px; font-weight: bold; color: #555555; }
 
+    #chainName { font-size: 22px; font-weight: bold; color: #555555; }
+    .mr-auto { margin: 0 auto!important; }
   </style>
 
 </head>
@@ -71,13 +73,11 @@
     <a class="navbar-brand" href="/">
       <img src="/img/logo-300.png" style="width:150px; height: 30px;"
            class="d-inline-block align-top" alt="logo">
-      <span id="chainName" th:text="${symbol}"></span>&nbsp;
-      <span id="testnet" class="badge badge-pill badge-info" th:text="${isTestnet}"></span>
     </a>
 
     <!-- mobile expand btn -->
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
-            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
 
@@ -104,20 +104,27 @@
 
       <!-- Right buttons -->
       <form class="form-inline my-2 my-lg-0">
-        <a class="nav-link" href="https://live.blockcypher.com/btc-testnet/" target="_blank"
-           data-toggle="tooltip" data-placement="auto" title="Block Explorer">
-          <button type="button" class="btn"><i class="fas fa-globe-americas"></i></button>
-        </a>
-<!--        <a class="nav-link" href="https://testnet-faucet.mempool.co/" target="_blank">Faucet</a>-->
-        <a class="nav-link" href="https://testnet-faucet.mempool.co/" target="_blank"
-           data-toggle="tooltip" data-placement="auto" title="Testnet Faucet">
-          <button type="button" class="btn"><i class="fas fa-hand-holding-usd"></i></button>
-        </a>
-        <a class="nav-link" data-toggle="modal" data-target="#settingModal">
-          <button type="button" class="btn" data-toggle="tooltip" data-placement="auto" title="Node Settings">
-            <i class="fas fa-cogs"></i>
-          </button>
-        </a>
+        <span id="chainName" th:text="${symbol}"></span>&nbsp;
+        <span id="testnet" class="badge badge-pill badge-info" style="margin-right: 12px;" th:text="${isTestnet}"></span>
+        <div class="btn-group" role="group" aria-label="Basic example">
+            <button type="button" class="btn btn-outline-info btn-link-ext">
+              <a class="nav-link" href="https://live.blockcypher.com/btc-testnet/" target="_blank"
+                 data-toggle="tooltip" data-placement="auto" title="Block Explorer">
+                <i class="fas fa-globe-americas"></i>
+              </a>
+            </button>
+            <button type="button" class="btn btn-outline-info btn-link-ext">
+              <a class="nav-link" href="https://testnet-faucet.mempool.co/" target="_blank"
+                 data-toggle="tooltip" data-placement="auto" title="Testnet Faucet">
+                <i class="fas fa-hand-holding-usd"></i>
+              </a>
+            </button>
+            <button type="button" class="btn btn-outline-info" data-toggle="tooltip" data-placement="auto" title="Node Settings">
+              <a class="nav-link" data-toggle="modal" data-target="#settingModal">
+                <i class="fas fa-cogs"></i>
+              </a>
+            </button>
+        </div>
       </form>
     </div>
   </nav>
@@ -265,11 +272,14 @@
             }
             var str = '';
             // regDt, id, error
-            for (var i = 0; i < data.result.length; i++) {
-                str += '<tr><td class="text-left">' + data.result[i].error + '</td>'
-                    + '<td class="text-center">' + data.result[i].regDt.substring(5,16).replace('T', ' ')
-                        .replace('-', '.') + '</td></tr>';
-                if (i>4) { break; }
+            for (var i = 0; i < 6; i++) {
+                if (data.result.length>0 && i<data.result.length) {
+                  str += '<tr><td class="text-left">' + data.result[i].error.replace('\n', '<br>') + '</td>'
+                      + '<td class="text-center">' + data.result[i].regDt.substring(5,16).replace('T', ' ')
+                          .replace('-', '.') + '</td></tr>';
+                } else {
+                    str += '<tr><td>&nbsp;</td><td>&nbsp;</td></tr>';
+                }
             }
             $("#errors").html(str);
         });

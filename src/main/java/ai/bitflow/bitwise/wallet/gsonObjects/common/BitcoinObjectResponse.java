@@ -1,7 +1,7 @@
 package ai.bitflow.bitwise.wallet.gsonObjects.common;
 
-import com.google.gson.internal.LinkedTreeMap;
 import ai.bitflow.bitwise.wallet.gsonObjects.abstracts.BitcoinAbstractResponse;
+import com.google.gson.internal.LinkedTreeMap;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

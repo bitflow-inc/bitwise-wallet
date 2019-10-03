@@ -1,7 +1,7 @@
 package ai.bitflow.bitwise.wallet.gsonObjects.apiResponse;
 
-import ai.bitflow.bitwise.wallet.gsonObjects.common.AddressBalance;
 import ai.bitflow.bitwise.wallet.gsonObjects.abstracts.ApiCommonResponse;
+import ai.bitflow.bitwise.wallet.gsonObjects.common.AddressBalance;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

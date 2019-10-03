@@ -1,8 +1,5 @@
 package ai.bitflow.bitwise.wallet.daos;
 
-import ai.bitflow.bitwise.wallet.gsonObjects.bitcoin.*;
-import ai.bitflow.bitwise.wallet.gsonObjects.common.*;
-import com.google.gson.Gson;
 import ai.bitflow.bitwise.wallet.components.Logger;
 import ai.bitflow.bitwise.wallet.constants.Bitcoin0170Constant;
 import ai.bitflow.bitwise.wallet.constants.abstracts.BlockchainConstant;
@@ -17,6 +14,7 @@ import ai.bitflow.bitwise.wallet.repositories.TransactionRepository;
 import ai.bitflow.bitwise.wallet.services.abstracts.BitcoinService;
 import ai.bitflow.bitwise.wallet.services.interfaces.LockableWallet;
 import ai.bitflow.bitwise.wallet.utils.JsonRpcUtil;
+import com.google.gson.Gson;
 import lombok.Getter;
 import org.apache.http.client.ClientProtocolException;
 import org.springframework.beans.factory.annotation.Autowired;
