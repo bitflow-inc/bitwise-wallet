@@ -35,26 +35,26 @@ public interface BlockchainConstant {
     double TEST_EXPCT_FEE   = 0.0001D;
     double ADA_TO_LOVELACE  = 1000000D;
     
-    char INTENT_PURETX         = 'S';
-	char INTENT_BUY_TOKEN      = 'T';
-	char INTENT_BONUS_TOKEN    = 'B';
-	char INTENT_MANUAL_PAY     = 'M';
-	char INTENT_POINT_EXCHANGE = 'P';
+    char INTENT_PURETX          = 'S';
+	char INTENT_BUY_TOKEN       = 'T';
+	char INTENT_BONUS_TOKEN     = 'B';
+	char INTENT_MANUAL_PAY      = 'M';
+	char INTENT_POINT_EXCHANGE  = 'P';
     		
-    char STAT_UNKNOWN  	  	   = 'U'; // UNKNOWN
-    char STAT_ACCEPTED    	   = 'A'; // ACCEPTED
-    char STAT_BEFOREDEPOSIT    = 'B'; // BEFORE DEPOST
-    char STAT_DEPOSITING  	   = 'D'; // DEPOSITING
-    char STAT_BEFOREWITHDRAWAL = 'P'; // BEFORE WITHDRAWAL    
-    char STAT_PROGRESS 	 	   = 'P'; // 범용: 진행 중
-    char STAT_WITHDRAWING  	   = 'W'; // WITHDRAWING
-    char STAT_COMPLETED	  	   = 'C'; // COMPLETED
-    char STAT_FAILED   	  	   = 'F'; // FAILED
+    char STAT_UNKNOWN  	  	    = 'U'; // UNKNOWN
+    char STAT_ACCEPTED    	    = 'A'; // ACCEPTED
+    char STAT_BEFOREDEPOSIT     = 'B'; // BEFORE DEPOST
+    char STAT_DEPOSITING  	    = 'D'; // DEPOSITING
+    char STAT_BEFOREWITHDRAWAL  = 'P'; // BEFORE WITHDRAWAL
+    char STAT_PROGRESS 	 	    = 'P'; // 범용: 진행 중
+    char STAT_WITHDRAWING  	    = 'W'; // WITHDRAWING
+    char STAT_COMPLETED	  	    = 'C'; // COMPLETED
+    char STAT_FAILED   	  	    = 'F'; // FAILED
     
-    char STAT_WAITCONFIRM   = 'T'; // not using now
+    char STAT_WAITCONFIRM       = 'T'; // not using now
     
-    char TYPE_TX_SEND  	    = 'S';
-    char TYPE_TX_RECV  	    = 'R';
+    char TYPE_TX_SEND  	        = 'S';
+    char TYPE_TX_RECV  	        = 'R';
     
     String JSON_HEADER   = "application/json;charset=utf-8";
     String TAG_TEST      = "[TEST]";
@@ -99,8 +99,6 @@ public interface BlockchainConstant {
     String SYMBOL_ETH	= "ETH";
     
     String SYMBOL_BCD	= "BCD";
-    String SYMBOL_KAI	= "KAI";
-    String SYMBOL_BHPC	= "BHPC";
     String SYMBOL_ZIL	= "ZIL";
     String SYMBOL_ETC	= "ETC";
     String SYMBOL_CLO	= "CLO";

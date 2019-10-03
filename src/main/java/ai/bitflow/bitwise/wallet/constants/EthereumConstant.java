@@ -1,13 +1,14 @@
 package ai.bitflow.bitwise.wallet.constants;
 
 public interface EthereumConstant {
+
     String METHOD_SENDFROMADDR     	= "eth_sendTransaction";
     String METHOD_GAS_PRICE        	= "eth_gasPrice";
     String METHOD_ESTIMATEGAS      	= "eth_estimateGas";
     String METHOD_GETBALANCE       	= "eth_getBalance";
     String METHOD_SYNCING          	= "eth_syncing";
-    String METHOD_ACCOUNTS         	= "eth_accounts";          // ETC?
-    String METHOD_LISTACCOUNTS     	= "personal_listAccounts"; // ETH?
+    String METHOD_ACCOUNTS         	= "eth_accounts";           // ETC?
+    String METHOD_LISTACCOUNTS     	= "personal_listAccounts";  // ETH?
     String METHOD_WALLETPP         	= "personal_unlockAccount";
     String METHOD_WALLETLOCK       	= "personal_lockAccount";
     String METHOD_NEWADDR          	= "personal_newAccount";
