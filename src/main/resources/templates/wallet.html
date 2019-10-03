@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorator="layout/theme">
+<head></head>
+<body>
+
+<th:block layout:fragment="content">
+
+  <div class="row first-row">
+    <div class="col-md-12 col-12 col">
+      <h5>Wallets (Total <span id="wallet-count"></span>)</h5>
+      <table class="table table-bordered table-sm">
+        <thead>
+        <tr>
+          <th scope="col">Wallet Name</th>
+          <th scope="col">Locked</th>
+          <th scope="col">Balance</th>
+          <th scope="col">Addresses</th>
+        </tr>
+        </thead>
+        <tbody id="wallets">
+        <tr>
+          <td colspan="4" class="text-center">지갑이 없습니다</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</th:block>
+
+<script src="https://kit.fontawesome.com/f66fa7c1ea.js"></script>
+<script>
+  $(function () {
+    $.post("/api/v1/wallet", null, function (data) {
+      console.log('data ' + JSON.stringify(data));
+      if (data.result === null || typeof (data.result) === 'undefined'
+        || data.result.wallets === null || typeof (data.result.wallets) === 'undefined'
+        || data.result.wallets.length < 1) {
+        return;
+      }
+      $("#wallet-count").text(data.result.walletCount);
+      var str = '';
+      for (var i = 0; i < data.result.wallets.length; i++) {
+        var lockicon = data.result.wallets[i].lock===true
+          ?'<i class="fas fa-lock text-muted"></i>'
+          :'<i class="fas fa-lock-open text-danger" onclick="encryptwallet(\''
+          + data.result.wallets[i].name +'\')"></i>';
+        str += '<tr><td scope="row" class="text-center">'
+          + data.result.wallets[i].name + '</td>'
+          + '<td class="text-center">' + lockicon + '</td>'
+          + '<td class="text-right">' + data.result.wallets[i].balance + '</td>'
+          + '</tr>';
+      }
+      $("#wallets").html(str);
+    });
+  });
+
+  function encryptwallet(walletname) {
+    //
+  }
+</script>
+
+</body>
+</html>

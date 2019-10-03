@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorator="layout/theme">
+<head></head>
+
+<body>
+
+<th:block layout:fragment="content">
+  <div class="row">
+    <div class="col-md-12 col-12 col">
+      <h5>API list</h5>
+      <table class="table table-bordered table-sm">
+        <thead>
+        <tr>
+          <th scope="col">api name</th>
+          <th scope="col">method</th>
+          <th scope="col">TX Hash</th>
+        </tr>
+        </thead>
+        <tbody id="txs">
+          <tr>
+            <td class="text-center">getblockcount</td>
+            <td>POST</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="text-center">estimatefee</td>
+            <td>POST</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="text-center">createwallet</td>
+            <td>POST</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="text-center">listwallets</td>
+            <td>POST</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="text-center">getnewaddress</td>
+            <td>POST</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="text-center">validateaddress</td>
+            <td>POST</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="text-center">getbalance</td>
+            <td>POST</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="text-center">sendtoaddress</td>
+            <td>POST</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="text-center">sendmany</td>
+            <td>POST</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="text-center">sendrawtransaction</td>
+            <td>POST</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="text-center">gettransactions</td>
+            <td>POST</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="text-center">gettransaction</td>
+            <td>POST</td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</th:block>
+
+</body>
+</html>

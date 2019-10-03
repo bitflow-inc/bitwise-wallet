@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorator="layout/theme">
+<head></head>
+
+<body>
+
+  <th:block layout:fragment="content">
+    <div class="row first-row">
+      <div class="col-md-3 col-6">
+        <div class="card">
+          <div class="card-body">
+            <table class="table table-bordered table-sm">
+              <thead>
+              <tr>
+                <th scope="col" style="width: 50%;"><i class="fas fa-plug"></i> Connection</th>
+                <th scope="col" style="width: 50%;">Status</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <th>Database</th>
+                <td id="database-nw"></td>
+              </tr>
+              <tr>
+                <th>Database Auth.</th>
+                <td id="database-at"></td>
+              </tr>
+              <tr>
+                <th>Node</th>
+                <td id="node-nw"></td>
+              </tr>
+              <tr>
+                <th>Node RPC Auth.</th>
+                <td id="node-rpc-at"></td>
+              </tr>
+              </tbody>
+            </table>
+            <table class="table table-bordered table-sm">
+              <thead>
+              <tr>
+                <th scope="col" style="width: 50%;"><i class="fas fa-server"></i> API Server</th>
+                <th scope="col" style="width: 50%;">Status</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <th>O/S</th>
+                <td id="osname"></td>
+              </tr>
+              <tr>
+                <th>Memory</th>
+                <td id="memusage"></td>
+              </tr>
+              <tr>
+                <th>Storage</th>
+                <td id="diskusage"></td>
+              </tr>
+              <tr style="display: none;">
+                <th>CPU</th>
+                <td id="cpuusage"></td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="card">
+          <div class="card-body">
+            <table class="table table-bordered table-sm">
+              <thead>
+              <tr>
+                <th scope="col" style="width: 50%;"><i class="fas fa-cube"></i>&nbsp;Block</th>
+                <th scope="col" style="width: 50%;">Count</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <th>Best</th>
+                <td id="bestCount"></td>
+              </tr>
+              <tr>
+                <th>Synchronized</th>
+                <td id="syncCount" style="font-weight: bold;color: #1976d2;"></td>
+              </tr>
+              <tr>
+                <th>Start From</th>
+                <td id="startCount"></td>
+              </tr>
+              </tbody>
+            </table>
+            <table class="table table-bordered table-sm">
+              <thead>
+              <tr>
+                <th scope="col" style="width: 50%;"><i class="fas fa-donate"></i> Wallet</th>
+                <th scope="col" style="width: 50%;">Value</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <th>Account</th>
+                <td id="wallet-count"></td>
+              </tr>
+              <tr>
+                <th>Address</th>
+                <td id="address-count"></td>
+              </tr>
+              <tr>
+                <th>Balance</th>
+                <td id="balance"></td>
+              </tr>
+              <tr>
+                <th>Lock</th>
+                <td id="wallet-lock"></td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6 col-12">
+        <div class="card">
+          <div class="card-body">
+            <table class="table table-bordered table-sm">
+              <thead>
+              <tr>
+                <th scope="col"><i class="fas fa-radiation"></i> Error Message</th>
+                <th scope="col" style="width:15%;">Time</th>
+              </tr>
+              </thead>
+              <tbody id="errors">
+              <tr>
+                <td colspan="2"class="text-center">에러가 없습니다</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12 col-12 col">
+        <h5 style="margin-left: 10px;"><i class="fas fa-plane-departure"></i>&nbsp;&nbsp;Last Transactions (Total <span id="transaction-count"></span>)</h5>
+        <table class="table table-bordered table-sm">
+          <thead>
+          <tr>
+            <th scope="col">Uid</th>
+            <th scope="col">Type</th>
+            <th scope="col">TX Hash</th>
+            <th scope="col">To Address</th>
+            <th scope="col">Amount</th>
+            <th scope="col">Fee</th>
+            <th scope="col">Confirm</th>
+            <th scope="col">Time</th>
+          </tr>
+          </thead>
+          <tbody id="txs">
+          <tr>
+            <td colspan="8" class="text-center">거래내역이 없습니다</td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </th:block>
+
+</body>
+</html>
