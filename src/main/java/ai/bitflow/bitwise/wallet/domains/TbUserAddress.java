@@ -7,6 +7,9 @@ import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Date;
 
+/**
+ * 사용자별 암호화폐 월렛/(+어카운트)/주소 정보 저장 테이블
+ */
 @Data
 @Entity
 @IdClass(PkUidAddress.class)

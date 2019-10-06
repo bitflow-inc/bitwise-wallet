@@ -11,6 +11,9 @@ import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Date;
 
+/**
+ * 암호화폐 입출금 이력저장 테이블
+ */
 @Data
 @Entity
 @IdClass(PkTxidCategoryToAddr.class)

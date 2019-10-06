@@ -19,6 +19,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 
+/**
+ * 모바일월렛, 거래소, 블록익스플로러 등 블록체인과 연계된 응용프로그램의
+ * FRONT-END에 데이터들을 제공하기 위한 API 집합들
+ */
 @Slf4j
 @Controller
 @RequestMapping(value="/api/v1")

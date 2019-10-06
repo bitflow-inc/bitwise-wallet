@@ -24,6 +24,10 @@ import java.util.Optional;
 import java.util.Set;
 
 
+/**
+ * 1) 블록체인의 종류와 관계없이 공통적으로 사용하는 함수들을 추상 메서드로 정의
+ * 2) 블록체인의 종류와 관계없어 공통적으로 처리하는(메타 정보 저장 등) 함수들 구현
+ */
 @Slf4j
 @Repository
 public abstract class BlockchainDao {

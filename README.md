@@ -1,1 +1,1 @@
-# An uniform API gateway connects with various public blockchains.
+# Integrated, uniformed API gateway for Bitcoin compatible blockchains.

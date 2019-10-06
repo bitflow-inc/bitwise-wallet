@@ -9,6 +9,9 @@ import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Date;
 
+/**
+ * 응용프로그램 에러저장 테이블
+ */
 @Slf4j
 @Data
 @Entity

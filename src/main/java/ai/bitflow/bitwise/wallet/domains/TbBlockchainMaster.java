@@ -3,13 +3,15 @@ package ai.bitflow.bitwise.wallet.domains;
 
 import ai.bitflow.bitwise.wallet.domains.primarykeys.PkSymbolTestnet;
 import lombok.Data;
-import org.hibernate.annotations.ColumnDefault;
 
 import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Date;
 
 
+/**
+ * 블록체인 마스터 정보 저장 테이블
+ */
 @Entity
 @Data
 @IdClass(PkSymbolTestnet.class)

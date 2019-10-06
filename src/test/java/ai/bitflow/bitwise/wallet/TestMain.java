@@ -10,11 +10,9 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.io.File;
-import java.lang.management.ManagementFactory;
-import java.lang.management.MemoryMXBean;
-import java.lang.management.OperatingSystemMXBean;
-
+/**
+ * 필요 시 단위 자동화 테스트 메서드 추가하여 구현
+ */
 @Slf4j
 @TestPropertySource(properties = "scheduling.enabled=false")
 @SpringBootTest

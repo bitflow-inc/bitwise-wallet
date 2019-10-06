@@ -20,7 +20,6 @@ import ai.bitflow.bitwise.wallet.gsonObjects.common.SystemInfo;
 import ai.bitflow.bitwise.wallet.services.interfaces.OwnChain;
 import ai.bitflow.bitwise.wallet.services.interfaces.SendManyWallet;
 import ai.bitflow.bitwise.wallet.utils.JsonRpcUtil;
-import com.google.gson.internal.LinkedTreeMap;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Utils;
@@ -40,7 +39,10 @@ import javax.persistence.EntityTransaction;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.text.DecimalFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 
 /**

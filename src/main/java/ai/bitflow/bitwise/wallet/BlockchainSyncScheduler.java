@@ -11,6 +11,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 
+/**
+ * 블록체인 마스터 정보 업데이트
+ * 암호화폐 입출금 상태 체크
+ * (상수 값으로 설정된 주기, INTERVAL마다 반복)
+ */
 @Slf4j
 @Component
 @ConditionalOnProperty(value = "scheduling.enabled", havingValue = "true", matchIfMissing = true)

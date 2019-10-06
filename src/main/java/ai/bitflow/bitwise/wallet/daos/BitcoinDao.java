@@ -27,6 +27,10 @@ import java.text.DecimalFormat;
 import java.util.*;
 
 
+/**
+ * 비트코인 계열 블록체인의 JSON-RPC를 호출하여
+ * 객체를 리턴하는 함수 집합
+ */
 @Repository
 public class BitcoinDao extends BlockchainDao implements Bitcoin0170Constant,
         BlockchainConstant, LockableWallet {

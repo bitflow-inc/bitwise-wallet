@@ -6,8 +6,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 
 /**
- * @author 
- * @since 
+ * 스프링 부트 응용프로그램 진입점
+ * 애플리케이션 글로벌 설정
  */
 @SpringBootApplication
 @EnableScheduling

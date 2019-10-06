@@ -9,7 +9,9 @@ import javax.persistence.Id;
 import javax.persistence.IdClass;
 import java.io.Serializable;
 
-
+/**
+ * 응용프로그램 환경설정 저장 테이블
+ */
 @Entity
 @Data
 @IdClass(PkSymbolTestnet.class)
