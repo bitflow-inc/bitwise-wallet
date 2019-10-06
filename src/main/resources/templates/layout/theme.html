@@ -65,6 +65,11 @@
     #swagger-iframe { height: 100%; min-height: 640px; }
     #progress-wrapper { position: absolute; top: 50%; left: 50%;
       transform: translate(-50%, -50%); }
+    #floating-btn-wrapper { position: absolute; right: 0%; bottom: 0%; transform: translate(-10%, -10%);
+      box-shadow: 0 5px 11px 0 rgba(0,0,0,.18), 0 4px 15px 0 rgba(0,0,0,.15);
+      z-index: 1; vertical-align: middle; display: inline-block; overflow: hidden;
+      transition: all .2s ease-in-out; margin: 10px; border-radius: 50%; padding: 0;
+      cursor: pointer; width: 47px; height: 47px;}
     #chainName { font-size: 22px; font-weight: bold; color: #555555; }
     #walletInfos table tbody th { text-align: center; }
     #walletInfos table tbody td { text-align: right; }
@@ -72,7 +77,6 @@
     .mr-auto { margin: 0 auto!important; }
   </style>
 
-  <th:block layout:fragment="style"></th:block>
 </head>
 
 <body th:fragment="mainBody">
@@ -287,12 +291,16 @@
               <td scope="col" style="width: 60%;" id="fromWallet"></td>
             </tr>
             <tr>
+              <th scope="col" style="width: 40%;">Wallet Lock</th>
+              <td scope="col" style="width: 60%;" id="walletLock"></td>
+            </tr>
+            <tr>
               <th scope="col">To Address</th>
               <td scope="col"><input type="text" class="form-control form-control-sm" id="toAddress"></td>
             </tr>
             <tr>
               <th scope="col">Balance</th>
-              <td scope="col" id="fromBalance" class="text-right blue-text"></td>
+              <td scope="col" id="fromBalance" class="text-right blue-text">Please wait...</td>
             </tr>
             <tr>
               <th scope="col">Amount</th>
@@ -308,13 +316,19 @@
                 </div>
               </td>
             </tr>
+            <tr id="row-pp" style="display: none;">
+              <th scope="col">Passphrase</th>
+              <td scope="col" class="text-right blue-text">
+                <input type="password" id="pp" class="form-control form-control-sm text-center">
+              </td>
+            </tr>
             </tbody>
           </table>
         </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
-        <a href="javascipr:transfer"><button type="button" class="btn btn-info">Send</button></a>
+        <a href="javascript:transfer();"><button type="button" class="btn btn-info">Send</button></a>
       </div>
     </div>
     </div>
@@ -362,6 +376,11 @@
        style="width: 3rem; height: 3rem; display: none;">
     <span class="sr-only">Loading...</span>
   </div>
+</div>
+
+<!-- floating button -->
+<div id="floating-btn-wrapper" class="d-flex justify-content-center">
+  <a class="btn-floating btn-lg btn-default waves-effect waves-light"><i class="fas fa-info"></i></a>
 </div>
 
 <script src="https://use.fontawesome.com/releases/v5.11.2/js/all.js"></script>

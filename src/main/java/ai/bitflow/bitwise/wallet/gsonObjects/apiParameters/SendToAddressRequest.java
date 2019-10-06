@@ -27,9 +27,9 @@ public class SendToAddressRequest {
     
     public SendToAddressRequest() {}
 
-    public SendToAddressRequest(String uid, String toaddress, double amount) {
+    public SendToAddressRequest(String uid, String toAddress, double amount) {
         this.uid = uid;
-        this.toAddress = toaddress;
+        this.toAddress = toAddress;
         this.amount = amount;
     }
     

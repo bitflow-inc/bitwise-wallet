@@ -13,35 +13,6 @@
             <table class="table table-bordered table-sm">
               <thead>
               <tr>
-                <th scope="col" style="width: 50%;"><i class="fas fa-plug"></i> Connection</th>
-                <th scope="col" style="width: 50%;">Status</th>
-              </tr>
-              </thead>
-              <tbody>
-              <tr>
-                <th>Database</th>
-                <td id="database-nw">
-                  <span th:if="${isDBCon}"><i class="fas fa-check"></i></span>
-                  <span th:unless="${isDBCon}"><i class="fas fa-times"></i></span>
-                </td>
-              </tr>
-              <tr>
-                <th>Database Auth.</th>
-                <td id="database-at"></td>
-              </tr>
-              <tr>
-                <th>Node</th>
-                <td id="node-nw"></td>
-              </tr>
-              <tr>
-                <th>Node RPC Auth.</th>
-                <td id="node-rpc-at"></td>
-              </tr>
-              </tbody>
-            </table>
-            <table class="table table-bordered table-sm">
-              <thead>
-              <tr>
                 <th scope="col" style="width: 50%;"><i class="fas fa-server"></i> API Server</th>
                 <th scope="col" style="width: 50%;">Status</th>
               </tr>
@@ -63,6 +34,36 @@
                 <th>CPU</th>
                 <td id="cpuusage"></td>
               </tr>
+              </tbody>
+            </table>
+            <table class="table table-bordered table-sm">
+              <thead>
+              <tr>
+                <th scope="col" style="width: 50%;"><i class="fas fa-plug"></i> Connection</th>
+                <th scope="col" style="width: 50%;">Status</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <th>Database</th>
+                <td id="database-nw">
+                  Available Soon
+<!--                  <span th:if="${isDBCon}"><i class="fas fa-check"></i></span>-->
+<!--                  <span th:unless="${isDBCon}"><i class="fas fa-times"></i></span>-->
+                </td>
+              </tr>
+<!--              <tr>-->
+<!--                <th>Database Auth.</th>-->
+<!--                <td id="database-at">Available Soon</td>-->
+<!--              </tr>-->
+              <tr>
+                <th>Node</th>
+                <td id="node-nw">Available Soon</td>
+              </tr>
+<!--              <tr>-->
+<!--                <th>Node RPC Auth.</th>-->
+<!--                <td id="node-rpc-at">Available Soon</td>-->
+<!--              </tr>-->
               </tbody>
             </table>
           </div>
@@ -102,21 +103,21 @@
               </thead>
               <tbody>
               <tr>
-                <th>Wallet</th>
+                <th>Wallets</th>
                 <td id="wallet-count"></td>
-              </tr>
-              <tr>
-                <th>Address</th>
-                <td id="address-count"></td>
               </tr>
               <tr>
                 <th>Balance</th>
                 <td id="balance"></td>
               </tr>
               <tr>
-                <th>Encrypted(default)</th>
-                <td id="wallet-lock"></td>
+                <th>Addresses</th>
+                <td id="address-count">Available Soon</td>
               </tr>
+<!--              <tr>-->
+<!--                <th>Default Wallet<br>Encryption</th>-->
+<!--                <td id="wallet-lock"></td>-->
+<!--              </tr>-->
               </tbody>
             </table>
           </div>
@@ -184,6 +185,7 @@
           return month + '.' + day + ' ' + hours + ':' + minutes;
       }
       $(function () {
+          $("#progress-spinner").show();
           $.post("/api/v1/dashboard", null, function (data) {
               // console.log('data ' + JSON.stringify(data));
               // {"code":999,"error":null,
@@ -196,6 +198,7 @@
               $("#osname").text(data.result.systemInfo.osName);
               $("#memusage").text(Math.round(parseFloat(data.result.systemInfo.memoryUsage / data.result.systemInfo.memoryMax * 100).toFixed(2)) + '%');
               $("#diskusage").text(Math.round(parseFloat(data.result.systemInfo.diskUsage / data.result.systemInfo.diskMax * 100).toFixed(2)) + '%');
+              $("#progress-spinner").hide();
           });
           $.post("/api/v1/lasttransactions", null, function (data) {
               // console.log('data ' + JSON.stringify(data));

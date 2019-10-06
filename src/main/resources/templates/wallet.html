@@ -4,6 +4,7 @@
 <head>
 <style>
   .table .btn-sm { padding: .1rem .2rem; font-size: .6rem; }
+  .btn-outline-secondary { background-color: white; }
 </style>
 </head>
 <body>
@@ -29,8 +30,8 @@
                 <th scope="col" style="width: 28%;">Action</th>
               </tr>
               </thead>
-              <tbody>
-                <tr th:each="item : ${wallets.getWalletnames()}" >
+              <tbody id="wallet-rows">
+                <tr th:each="item : ${wallets.getWalletnames()}" th:attr="id=${'tr-wallet-' + item}">
                   <td class="text-center">&nbsp;</td>
                   <td class="text-center">
                     <button type="button" class="btn btn-outline-secondary btn-sm" th:text="${item==''?'&nbsp;':item}"
@@ -39,14 +40,16 @@
 <!--                  <td class="text-center">&nbsp;</td>-->
 <!--                  <td class="text-center">&nbsp;</td>-->
                   <td class="text-center">
-                    <button type="button" class="btn btn-danger btn-sm">ENCRYPT</button>
-                    &nbsp;
                     <button type="button" class="btn btn-info btn-sm" data-toggle="modal"
                             data-target="#transferModal" th:attr="data-wallet=${item}"
                             onclick="opensenddialog(this)">SEND</button>
                     &nbsp;
                     <a href="javascript:void(0);" th:attr="data-wallet=${item}" onclick="getwalletinfo(this)">
                       <button type="button" class="btn btn-outline-secondary btn-sm">INFO</button>
+                    </a>
+                      &nbsp;
+                    <a href="javascript:void(0);" th:attr="data-wallet=${item}" onclick="getnewaddress(this)">
+                      <button type="button" class="btn btn-outline-secondary btn-sm">NEW ADDRESS</button>
                     </a>
                   </td>
                 </tr>
@@ -87,7 +90,8 @@
     $.post("/api/v1/getwalletinfo/" + walletname, null, function (data) {
       $("#progress-spinner").hide();
       if (data && data.result) {
-          // console.log('data ' + JSON.stringify(data.result));
+        var enctyptHtml = data.result.walletlock?'<i class="fas fa-lock"></i>':'<i class="fas fa-lock-open"></i>';
+        var btnEncrypt = data.result.walletlock?'':'&nbsp;<button type="button" class="btn btn-danger btn-sm" onclick="alert(\'To be supported\');">ENCRYPT</button>';
         var str = '<tr><th>Wallet Name</th><td>\"' + data.result.walletname + '\"</td></tr>'
             + '<tr><th>Wallet Version</th><td>' + data.result.walletversion + '</td></tr>'
             + '<tr><th>Address Count</th><td>' + data.result.addressCount + '</td></tr>'
@@ -97,7 +101,7 @@
             + '<tr><th>TX Count</th><td>' + data.result.txcount + '</td></tr>'
             + '<tr><th>Pay TX Fee</th><td>' + data.result.paytxfee + '</td></tr>'
             + '<tr><th>Private Keys Enabled</th><td>' + data.result.private_keys_enabled + '</td></tr>'
-            + '<tr><th>Wallet Lock</th><td>' + data.result.walletlock + '</td></tr>';
+            + '<tr><th>Wallet Encryption</th><td>' + enctyptHtml + btnEncrypt + '</td></tr>';
 
         $("#walletInfos").html(str);
         $('#walletModal').modal();
@@ -108,13 +112,17 @@
   function getaddressinfo(e) {
     var walletname = e.getAttribute("data-wallet") ? e.getAttribute("data-wallet") : "";
     $("#progress-spinner").show();
+    $("#wallet-rows tr").css("background-color", "white");
+    $("#tr-wallet-" + walletname).css("background-color", "#deeff3");
     $.post("/api/v1/getwalletinfo/" + walletname, null, function (data) {
       $("#progress-spinner").hide();
       console.log('wallet ' + JSON.stringify(data.result));
       if (data && data.result) {
         var str = '';
         for (var i = 0; i < data.result.addresses.length; i++) {
-          str += '<tr><td>' + data.result.addresses[i] + '</td><td>&nbsp;</td></tr>'
+          str += '<tr><td><span>' + data.result.addresses[i]
+            + '</span>' // &nbsp;<i class="far fa-copy" onclick="copyAddress(\'' + data.result.addresses[i] + '\')"></i>'
+            + '</td><td>Available Soon</td></tr>';
         }
         $("#addresses-parent").html(str);
       }
@@ -124,7 +132,12 @@
   function opensenddialog(e) {
       var walletname = e.getAttribute("data-wallet")?e.getAttribute("data-wallet"):"";
       console.log("data-wallet " + walletname);
+      $("#row-pp").hide();
       $("#fromWallet").text("\"" + walletname + "\"");
+      $("#fromWallet").attr("data-wallet", walletname);
+      $("#fromBalance").text("Please wait...");
+      $("#walletLock").html("&nbsp;");
+      $("#send-amt").val("");
       var walletname = e.getAttribute("data-wallet") ? e.getAttribute("data-wallet") : "";
       $("#progress-spinner").show();
       $.post("/api/v1/getwalletinfo/" + walletname, null, function (data) {
@@ -133,6 +146,13 @@
               var balance = data.result.balance;
               console.log('typeof ' + typeof(balance));
               $("#fromBalance").text(balance);
+              if (data.result.walletlock) {
+                  $("#walletLock").html("<i class=\"fas fa-lock\"></i>");
+                  $("#row-pp").show();
+              } else {
+                  $("#walletLock").html("<i class=\"fas fa-lock-open\"></i>");
+                  $("#row-pp").hide();
+              }
               $("#btn-amt-10").attr("data-amt", Math.round(balance*10000000*0.1)/10000000);
               $("#btn-amt-25").attr("data-amt", Math.round(balance*10000000*0.25)/10000000);
               $("#btn-amt-50").attr("data-amt", Math.round(balance*10000000*0.5)/10000000);
@@ -140,11 +160,68 @@
               $("#btn-amt-100").attr("data-amt", balance);
           }
       });
-
   }
 
   function setAmount(btn) {
       $("#send-amt").val(btn.getAttribute("data-amt"));
+  }
+
+  /**
+   * params: uid, toAddress, amount, pp
+   */
+  function transfer() {
+      if ($("#toAddress").val().length<1) {
+          alert("Please input the To Address field");
+          return;
+      } else if ($("#send-amt").val().length<1) {
+          alert("Please input the Amount field");
+          return;
+      }
+
+      $("#progress-spinner").show();
+      var walletname = $("#fromWallet").attr("data-wallet");
+      var params = {
+          toAddress: $("#toAddress").val(),
+          amount: $("#send-amt").val(),
+          pp: $("#pp").val()
+      };
+      $.ajax({
+          url: "/api/v1/sendtoaddress/" + walletname,
+          type: "POST",
+          data: JSON.stringify(params),
+          dataType: "json",
+          contentType:"application/json; charset=utf-8",
+          success: function (data) {
+            $("#progress-spinner").hide();
+            console.log('data ' + JSON.stringify(data));
+            if (data && data.result) {
+            }
+          }
+      });
+  }
+
+  function getnewaddress(e) {
+      var walletname = e.getAttribute("data-wallet") ? e.getAttribute("data-wallet") : "";
+      if (confirm('Are sure to create new address?')) {
+          $("#progress-spinner").show();
+          $.ajax({
+              url: "/api/v1/getnewaddress/" + walletname,
+              type: "POST",
+              data: '{}',
+              dataType: "json",
+              contentType:"application/json; charset=utf-8",
+              success: function (data) {
+                  $("#progress-spinner").hide();
+                  console.log('wallet ' + JSON.stringify(data.result));
+                  if (data && data.result) {
+                      getaddressinfo(e);
+                  }
+              }
+          });
+      }
+  }
+  function copyAddress(addr) {
+
   }
 
   function encryptwallet(walletname) {

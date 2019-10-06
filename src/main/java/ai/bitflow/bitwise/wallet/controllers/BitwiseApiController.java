@@ -138,13 +138,21 @@ public class BitwiseApiController implements BlockchainConstant {
      * 새 주소 생성
      */
     @ResponseBody
-    @RequestMapping(value="/getnewaddress", method= RequestMethod.POST)
-    public NewAddressResponse getnewaddress(
-            @RequestBody PersonalRequest param) {
-        if (param.getUid()==null || param.getUid().length()<1) {
+    @RequestMapping(value="/getnewaddress/", method= RequestMethod.POST)
+    public NewAddressResponse getnewaddress(@RequestBody PersonalRequest param) {
+        param.setUid("");
+        return service.newAddress(param);
+    }
+
+    @ResponseBody
+    @RequestMapping(value="/getnewaddress/{uid}", method= RequestMethod.POST)
+    public NewAddressResponse getnewaddress(@PathVariable String uid,
+                            @RequestBody PersonalRequest param) {
+        if (uid==null || uid.length()<1) {
             ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
             return null;
         }
+        param.setUid(uid);
         return service.newAddress(param);
     }
 
@@ -218,22 +226,50 @@ public class BitwiseApiController implements BlockchainConstant {
 
     /**
      * 출금요청
+     * @param param
+     * @return
      */
     @ResponseBody
     @RequestMapping(value="/sendtoaddress", method= RequestMethod.POST)
     public SendToAddressResponse sendtoaddress(
             @RequestBody SendToAddressRequest param) {
-
-        if (param.getUid()==null || param.getUid().length()<1
-        		|| param.getToAddress()==null || param.getAmount()<=0
+        param.setUid("");
+        if (param.getToAddress()==null || param.getAmount()<=0
                 || !param.getToAddress().trim().equals(param.getToAddress())
                 || param.getPp()==null || param.getPp().length()<1) {
             // 주소 앞뒤 공백 방어 필요
-    	    SendToAddressResponse res = new SendToAddressResponse();
+            SendToAddressResponse res = new SendToAddressResponse();
             res.setCode(CODE_FAIL_PARAM);
             return res;
         } else {
-    	    try {
+            try {
+                return service.sendToAddress(param);
+            } catch (Exception e) {
+                e.printStackTrace();
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+                return null;
+            }
+        }
+    }
+
+    /**
+     * 출금요청
+     * @param uid, toAddress, amount, pp
+     * @return
+     */
+    @ResponseBody
+    @RequestMapping(value="/sendtoaddress/{uid}", method= RequestMethod.POST)
+    public SendToAddressResponse sendtoaddress(
+            @PathVariable String uid, @RequestBody SendToAddressRequest param) {
+        param.setUid(uid);
+        if (param.getToAddress()==null || param.getAmount()<=0
+                || !param.getToAddress().trim().equals(param.getToAddress())) {
+            // 주소 앞뒤 공백 방어 필요
+            SendToAddressResponse res = new SendToAddressResponse();
+            res.setCode(CODE_FAIL_PARAM);
+            return res;
+        } else {
+            try {
                 return service.sendToAddress(param);
             } catch (Exception e) {
                 e.printStackTrace();

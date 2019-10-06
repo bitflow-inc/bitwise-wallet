@@ -308,7 +308,7 @@ public abstract class BitcoinService extends BlockchainCommonService
 //        2. address_type    (string, optional, default=set by -addresstype)
 //          The address type to use. Options are "legacy", "p2sh-segwit", and "bech32".
         String[] params = new String[1];
-        params[0] = "\"" + req.getUid() + "\"";
+        params[0] = "\"\"";
 
         try {
 	    	bitcoinDao.walletpassphraseshort(this);
@@ -428,11 +428,13 @@ public abstract class BitcoinService extends BlockchainCommonService
                 return ret;
             }
         }
-        success = bitcoinDao.walletpassphraseshort(this, param.getPp());
-        if (!success) {
-            ret.setCode(500);
-            ret.setError(WALLET_UNLOCK_SHORT);
-            return ret;
+        if (param.getPp()!=null && param.getPp().length()>0) {
+            success = bitcoinDao.walletpassphraseshort(this, param.getPp());
+            if (!success) {
+                ret.setCode(500);
+                ret.setError(WALLET_UNLOCK_SHORT);
+                return ret;
+            }
         }
         BitcoinStringResponse res = bitcoinDao.sendToAddress
                 (this, param);
