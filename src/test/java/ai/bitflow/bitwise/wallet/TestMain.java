@@ -28,24 +28,5 @@ public class TestMain {
     @Test
     public void test() {
         settingService.debug();
-//        OperatingSystemMXBean os = ManagementFactory.getOperatingSystemMXBean();
-//        MemoryMXBean mem = ManagementFactory.getMemoryMXBean();
-//        double cpuavr = os.getSystemLoadAverage();
-//        int proc = os.getAvailableProcessors();
-//        double memmax = mem.getNonHeapMemoryUsage().getMax();
-//        double memuse = mem.getNonHeapMemoryUsage().getUsed();
-//        double heapmax = mem.getHeapMemoryUsage().getMax();
-//        double heapuse = mem.getHeapMemoryUsage().getUsed();
-//        File file = new File("c:/");
-//        double filemax = file.getTotalSpace();
-//        double fileuse = file.getUsableSpace();
-//        System.out.println("cpu avr " + cpuavr);
-//        System.out.println("proc " + proc);
-//        System.out.println("memmax " + memmax);
-//        System.out.println("memuse " + memuse);
-//        System.out.println("heapmax " + heapmax);
-//        System.out.println("heapuse " + heapuse);
-//        System.out.println("filemax " + filemax);
-//        System.out.println("fileuse " + fileuse);
     }
 }

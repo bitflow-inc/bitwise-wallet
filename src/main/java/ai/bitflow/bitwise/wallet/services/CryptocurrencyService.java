@@ -13,20 +13,20 @@ import org.springframework.stereotype.Service;
 @Service("cryptoCurrencyService")
 class CryptocurrencyService extends BitcoinService {
 
-	@Getter @Value("${app.crypto.symbol}") private String symbol;
-    @Getter @Value("${app.crypto.rpcUrl}") private String rpcUrl;
-    @Getter @Value("${app.crypto.testnet}") private boolean testnet;
-    @Getter @Value("${app.crypto.rpcId}") private String rpcId;
-    @Getter @Value("${app.crypto.rpcPw}") private String rpcPw;
-    @Getter @Value("${app.crypto.decimals}") private int decimals;
-    @Getter @Value("${app.crypto.userAccount}") private String userAccount;
-    @Getter @Value("${app.crypto.blockStartFrom}") private long blockStartFrom;
-    @Getter @Value("${app.crypto.minConfirm}") private long minConfirm;
+	@Getter @Value("${app.setting.symbol}") private String symbol;
+    @Getter @Value("${app.setting.rpcUrl}") private String rpcUrl;
+    @Getter @Value("${app.setting.testnet}") private boolean testnet;
+    @Getter @Value("${app.setting.rpcId}") private String rpcId;
+    @Getter @Value("${app.setting.rpcPw}") private String rpcPw;
+    @Getter @Value("${app.setting.decimals}") private int decimals;
+    @Getter @Value("${app.setting.minConfirm}") private long minConfirm;
 
-    @Getter @Value("${app.crypto.ownerAccount}") private String ownerAccount;
-    @Getter @Value("${app.crypto.ownerAddress}") private String ownerAddress;
+    @Getter @Value("${app.setting.ownerAddress}") private String ownerAddress;
 
-    @Getter @Value("${app.crypto.minGasAmt}") private double minGasAmt;      // not using
-    @Getter @Value("${app.crypto.minAmtGather}") private double minAmtGather; // not using
+    @Getter @Value("${app.setting.minGasAmt}") private double minGasAmt;      // not using
+    @Getter @Value("${app.setting.minAmtGather}") private double minAmtGather; // not using
+    @Getter @Value("${app.setting.blockStartFrom}") private long blockStartFrom;
 
+    @Getter @Value("${app.setting.ownerAccount}") private String ownerAccount;
+    @Getter @Value("${app.setting.userAccount}") private String userAccount;
 }

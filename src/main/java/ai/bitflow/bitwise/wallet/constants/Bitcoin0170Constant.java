@@ -7,6 +7,7 @@ public interface Bitcoin0170Constant {
     String METHOD_ENCRYPTWALLET         = "encryptwallet";
     String METHOD_ESTIMATESMARTFEE      = "estimatesmartfee";
 
+    String METHOD_GETADDRBYLABEL        = "getaddressesbylabel";
     String METHOD_GETBALANCE            = "getbalance";
     String METHOD_GETBLOCK              = "getblock";
     String METHOD_GETBLOCKCOUNT         = "getblockcount";
@@ -27,5 +28,9 @@ public interface Bitcoin0170Constant {
     String METHOD_VALIDATEADDRESS       = "validateaddress";
     String METHOD_WALLETLOCK            = "walletlock";
     String METHOD_WALLETPP              = "walletpassphrase";
+
+    int ERR_CD_PP_WRONG                 = -14;  // Error: The wallet passphrase entered was incorrect.
+    int ERR_CD_WALLET_UNENC             = -15;  // Error: running with an unencrypted wallet, but walletpassphrase was called.
+
 
 }

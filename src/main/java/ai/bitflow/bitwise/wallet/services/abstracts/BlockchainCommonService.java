@@ -2,7 +2,7 @@ package ai.bitflow.bitwise.wallet.services.abstracts;
 
 import ai.bitflow.bitwise.wallet.components.Logger;
 import ai.bitflow.bitwise.wallet.constants.abstracts.BlockchainConstant;
-import ai.bitflow.bitwise.wallet.daos.BlockchainCommonDao;
+import ai.bitflow.bitwise.wallet.daos.BlockchainDao;
 import ai.bitflow.bitwise.wallet.domains.TbBlockchainMaster;
 import ai.bitflow.bitwise.wallet.domains.TbError;
 import ai.bitflow.bitwise.wallet.domains.TbTrans;
@@ -43,6 +43,7 @@ public abstract class BlockchainCommonService implements
 
     // wallet properties
     public abstract String getSymbol();
+    public abstract boolean isTestnet();
     public abstract String getRpcUrl();
     public abstract String getOwnerAddress();
     public abstract int getDecimals();
@@ -73,7 +74,7 @@ public abstract class BlockchainCommonService implements
     @Autowired
     protected EntityManagerFactory emf;
     @Autowired
-    protected BlockchainCommonDao commonDao;
+    protected BlockchainDao blockchainDao;
     @Autowired
     protected Logger log;
     protected Gson gson = new Gson();
@@ -197,7 +198,7 @@ public abstract class BlockchainCommonService implements
     @Transactional
     public boolean syncBlockchainMaster() {
     	
-        TbBlockchainMaster master = commonDao.getBlockchainMaster(this);
+        TbBlockchainMaster master = blockchainDao.getBlockchainMaster(this);
         long startBlock = 0, bestBlock = 0;
         try {
         	master.setDecimals(getDecimals());
@@ -223,7 +224,7 @@ public abstract class BlockchainCommonService implements
 	                master.setBestHeight(startBlock);
 	            }
         	}
-            commonDao.saveBlockchainMaster(master);
+            blockchainDao.saveBlockchainMaster(master);
         } catch(Exception e) {
             e.printStackTrace();
             return false;
@@ -270,7 +271,7 @@ public abstract class BlockchainCommonService implements
 	            renotiCnt += data1.size();
 	            for (TbTrans datum : data1) {
 	                datum.setReNotify('N');
-	                commonDao.notifyFrontEnd(datum);
+	                blockchainDao.notifyFrontEnd(datum);
 	                successcnt++;
 	            }
 	            transactions.saveAll(data1);

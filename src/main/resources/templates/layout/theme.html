@@ -28,6 +28,7 @@
 
   <style>
     html, body { font-family: Roboto, AppleSDGothicNeoM00; }
+    a { color: #1976d2; }
     .col, .col-1, .col-10, .col-11, .col-12, .col-2, .col-3, .col-4, .col-5, .col-6, .col-7, .col-8, .col-9, .col-auto, .col-lg, .col-lg-1, .col-lg-10, .col-lg-11, .col-lg-12, .col-lg-2, .col-lg-3, .col-lg-4, .col-lg-5, .col-lg-6, .col-lg-7, .col-lg-8, .col-lg-9, .col-lg-auto, .col-md, .col-md-1, .col-md-10, .col-md-11, .col-md-12, .col-md-2, .col-md-3, .col-md-4, .col-md-5, .col-md-6, .col-md-7, .col-md-8, .col-md-9, .col-md-auto, .col-sm, .col-sm-1, .col-sm-10, .col-sm-11, .col-sm-12, .col-sm-2, .col-sm-3, .col-sm-4, .col-sm-5, .col-sm-6, .col-sm-7, .col-sm-8, .col-sm-9, .col-sm-auto, .col-xl, .col-xl-1, .col-xl-10, .col-xl-11, .col-xl-12, .col-xl-2, .col-xl-3, .col-xl-4, .col-xl-5, .col-xl-6, .col-xl-7, .col-xl-8, .col-xl-9, .col-xl-auto {
       padding-left: 6px;
       padding-right: 6px;
@@ -49,20 +50,29 @@
     .nav-pills .nav-link.active, .nav-pills .show>.nav-link { background-color: #43bedd; }
     a.nav-link { font-size: 16px; color: inherit; min-width: 62px; }
     .btn-group .svg-inline--fa { font-size: 20px; }
+    #btn-amt-values .btn { padding: 2px 11px; }
     .btn-link-ext { background-image: url(/img/ic-ext.png); background-size: 12px;
       background-repeat: no-repeat; background-position: right 5px top 5px; }
     .table { margin-bottom: 0; }
-    .table th { font-size: 0.75rem;color: #444444;text-align: center; }
+    .table th { text-align: center; vertical-align: middle; font-size: 0.75rem; color: #444444; }
     .table thead th { background-color: #c9ecf5; }
-    .table td { text-align: right; font-size: 0.66rem; max-width: 200px; }
+    .table td { text-align: center; vertical-align: middle; font-size: 0.66rem; max-width: 200px; }
     .table td.uid { overflow-x: hidden; }
+    h5 > button { margin-bottom: 7px; }
+    .blue-text { color: #1976d2; }
 
     #errors td:first-child { color: #d50000; }
-
+    #swagger-iframe { height: 100%; min-height: 640px; }
+    #progress-wrapper { position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%); }
     #chainName { font-size: 22px; font-weight: bold; color: #555555; }
+    #walletInfos table tbody th { text-align: center; }
+    #walletInfos table tbody td { text-align: right; }
+    #transferModal th, #transferModal td { font-size: .875rem; }
     .mr-auto { margin: 0 auto!important; }
   </style>
 
+  <th:block layout:fragment="style"></th:block>
 </head>
 
 <body th:fragment="mainBody">
@@ -86,26 +96,23 @@
 
       <ul class="navbar-nav mr-auto nav-pills">
         <li class="nav-item">
-          <a class="nav-link active" href="/">Dashboard</a>
+          <a class="nav-link" th:classappend="${menuIdx==0}?active" href="/">Dashboard</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="/page/account">Wallet</a>
+          <a class="nav-link" th:classappend="${menuIdx==1}?active" href="/page/wallet">Wallet</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="/page/tx">Transaction</a>
+          <a class="nav-link" th:classappend="${menuIdx==2}?active" href="/page/tx">Transaction</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="/page/transfer">Transfer</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/page/api">API</a>
+          <a class="nav-link" th:classappend="${menuIdx==3}?active" href="/page/api">API</a>
         </li>
       </ul>
 
       <!-- Right buttons -->
       <form class="form-inline my-2 my-lg-0">
         <span id="chainName" th:text="${symbol}"></span>&nbsp;
-        <span id="testnet" class="badge badge-pill badge-info" style="margin-right: 12px;" th:text="${isTestnet}"></span>
+        <span class="badge badge-pill badge-info" style="margin-right: 12px;" th:text="${networkType}"></span>
         <div class="btn-group" role="group" aria-label="Basic example">
             <button type="button" class="btn btn-outline-info btn-link-ext">
               <a class="nav-link" href="https://live.blockcypher.com/btc-testnet/" target="_blank"
@@ -113,7 +120,7 @@
                 <i class="fas fa-globe-americas"></i>
               </a>
             </button>
-            <button type="button" class="btn btn-outline-info btn-link-ext">
+            <button type="button" class="btn btn-outline-info btn-link-ext" th:if="${isTestnet}">
               <a class="nav-link" href="https://testnet-faucet.mempool.co/" target="_blank"
                  data-toggle="tooltip" data-placement="auto" title="Testnet Faucet">
                 <i class="fas fa-hand-holding-usd"></i>
@@ -137,12 +144,12 @@
 
 </div>
 
-<!-- Modal -->
+<!-- Modal #1 Setting -->
 <div class="modal fade" id="settingModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLongTitle"><i class="fas fa-cogs"></i> Settings</h5>
+        <h5 class="modal-title" id="exampleModalLongTitle"><i class="fas fa-cogs"></i>&nbsp;&nbsp;Settings</h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
@@ -150,64 +157,210 @@
       <div class="modal-body">
         <div class="container-fluid">
           <div class="row">
-            <div class="col-md-4">Cryptocurrency</div>
-            <div class="col-md-8 ml-auto">
-              <div class="btn-group">
-                <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true"
-                      aria-expanded="false">
-                  Symbol
-                </button>
-                <div class="dropdown-menu">
-                  <a class="dropdown-item" href="#">Bitcoin</a>
-                  <a class="dropdown-item" href="#">Litecoin</a>
-                  <a class="dropdown-item" href="#">Bitcoin Cash</a>
-                  <a class="dropdown-item" href="#">Bitcoin SV</a>
-                  <a class="dropdown-item" href="#">Dogecoin</a>
-                  <a class="dropdown-item" href="#">Bitcoin Gold</a>
-                  <a class="dropdown-item" href="#">Bitcoin Diamond</a>
+            <div class="col-md-3">Blockchain</div>
+            <div class="col-md-5 ml-auto">
+              <select class="custom-select mr-sm-2" id="blockchain-type">
+                <option value="btc" selected>Bitcoin</option>
+                <option value="ltc">Litecoin</option>
+                <option value="bch">Bitcoin Cash</option>
+                <option value="bsv">Bitcoin SV</option>
+                <option value="doge">Dogecoin</option>
+                <option value="btg">Bitcoin Gold</option>
+                <option value="bcd">Bitcoin Diamond</option>
+              </select>
+            </div>
+            <div class="col-md-4 ml-auto">
+              <div class="custom-control custom-checkbox mr-sm-2">
+                <label class="custom-control-label" for="check-testnet">Testnet</label>
+                <input class="custom-control-input" type="checkbox" id="check-testnet">
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-3">Node</div>
+            <div class="col-md-9 ml-auto" style="margin-left: 0;">
+              <div class="short-div row">
+                <div class="col-md-4">IP</div>
+                <div class="col-md-8"><input type="text" class="form-control" id="node-ip" placeholder="localhost"></div>
+              </div>
+              <div class="short-div row">
+                <div class="col-md-4">RPC Port</div>
+                <div class="col-md-8">
+                  <input type="text" class="form-control" id="rpc-port" placeholder="18333">
+                </div>
+              </div>
+              <div class="short-div row">
+                <div class="col-md-4">RPC User</div>
+                <div class="col-md-8">
+                  <input type="text" class="form-control" id="rpc-user" placeholder="btc-user">
+                </div>
+              </div>
+              <div class="short-div row">
+                <div class="col-md-4">RPC Password</div>
+                <div class="col-md-8">
+                  <input type="text" class="form-control" id="rpc-pw" placeholder="******">
                 </div>
               </div>
             </div>
           </div>
           <div class="row">
-            <div class="col-md-4">Testnet</div>
-            <div class="col-md-8 ml-auto">
-              <div class="form-check">
-                <input class="form-check-input position-static" type="checkbox" id="blankCheckbox" value="option1" aria-label="TT">
+            <div class="col-md-3">Database</div>
+            <div class="col-md-9 ml-auto" style="margin-left: 0;">
+              <div class="short-div row">
+                <div class="col-md-4">IP</div>
+                <div class="col-md-8"><input type="text" class="form-control" id="db-ip" placeholder="localhost"></div>
               </div>
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-md-4">RPC Port</div>
-            <div class="col-md-8 ml-auto">
-              <input type="email" class="form-control" id="colFormLabel1" placeholder="18333">
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-md-4">RPC User</div>
-            <div class="col-md-8 ml-auto">
-              <input type="email" class="form-control" id="colFormLabel2" placeholder="18333">
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-md-4">RPC Password</div>
-            <div class="col-md-8 ml-auto">
-              <input type="email" class="form-control" id="colFormLabel3" placeholder="18333">
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-md-4">Database</div>
-            <div class="col-md-8 ml-auto">
-              <input type="email" class="form-control" placeholder="Connection String">
+              <div class="short-div row">
+                <div class="col-md-4">Port</div>
+                <div class="col-md-8">
+                  <input type="text" class="form-control" id="db-port" placeholder="18333">
+                </div>
+              </div>
+              <div class="short-div row">
+                <div class="col-md-4">User</div>
+                <div class="col-md-8">
+                  <input type="text" class="form-control" id="db-user" placeholder="btc-user">
+                </div>
+              </div>
+              <div class="short-div row">
+                <div class="col-md-4">Password</div>
+                <div class="col-md-8">
+                  <input type="text" class="form-control" id="db-pw" placeholder="******">
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-primary">Apply</button>
+        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-info">Apply</button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Modal #2 Wallet Info -->
+<div class="modal fade" id="walletModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-wallet"></i>&nbsp;&nbsp;Wallet Info</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid" style="padding: 0;">
+          <table class="table table-bordered table-sm">
+            <thead>
+            <tr>
+              <th scope="col" style="width: 50%;">Property</th>
+              <th scope="col" style="width: 50%;">Value</th>
+            </tr>
+            </thead>
+            <tbody id="walletInfos">
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal #3 Transfer -->
+<div class="modal fade" id="transferModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-fighter-jet"></i>&nbsp;&nbsp;Transfer</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid" style="padding: 0;">
+          <table class="table table-bordered table-sm">
+            <tbody>
+            <tr>
+              <th scope="col" style="width: 40%;">From Wallet</th>
+              <td scope="col" style="width: 60%;" id="fromWallet"></td>
+            </tr>
+            <tr>
+              <th scope="col">To Address</th>
+              <td scope="col"><input type="text" class="form-control form-control-sm" id="toAddress"></td>
+            </tr>
+            <tr>
+              <th scope="col">Balance</th>
+              <td scope="col" id="fromBalance" class="text-right blue-text"></td>
+            </tr>
+            <tr>
+              <th scope="col">Amount</th>
+              <td scope="col" id="btn-amt-values">
+                <input type="number" id="send-amt" class="form-control form-control-sm text-right">
+                <div class="btn-group btn-group-sm" role="group"
+                     aria-label="First group">
+                  <button type="button" id="btn-amt-10" class="btn btn-outline-secondary" onclick="setAmount(this);">&nbsp;10%</button>
+                  <button type="button" id="btn-amt-25" class="btn btn-outline-secondary" onclick="setAmount(this);">&nbsp;25%</button>
+                  <button type="button" id="btn-amt-50" class="btn btn-outline-secondary" onclick="setAmount(this);">&nbsp;50%</button>
+                  <button type="button" id="btn-amt-75" class="btn btn-outline-secondary" onclick="setAmount(this);">&nbsp;75%</button>
+                  <button type="button" id="btn-amt-100" class="btn btn-outline-secondary" onclick="setAmount(this);">100%</button>
+                </div>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
+        <a href="javascipr:transfer"><button type="button" class="btn btn-info">Send</button></a>
+      </div>
+    </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal #4 Create Wallet -->
+<div class="modal fade" id="createWalletModal" tabindex="-1" role="dialog"
+     aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-wallet"></i>&nbsp;&nbsp;Wallet Info</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid" style="padding: 0;">
+          <table class="table table-bordered table-sm">
+            <tbody>
+              <tr>
+                <th scope="col" style="width: 50%;">From the Wallet</th>
+                <td scope="col" style="width: 50%;"></td>
+              </tr>
+              <tr>
+                <th scope="col" style="width: 50%;">To the Address</th>
+                <td scope="col" style="width: 50%;"></td>
+              </tr>
+              <tr>
+                <th scope="col" style="width: 50%;">Amount</th>
+                <td scope="col" style="width: 50%;"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- progress -->
+<div id="progress-wrapper" class="d-flex justify-content-center">
+  <div id="progress-spinner" class="spinner-border text-info" role="status"
+       style="width: 3rem; height: 3rem; display: none;">
+    <span class="sr-only">Loading...</span>
   </div>
 </div>
 
@@ -215,76 +368,7 @@
 <script src="/js/jquery-3.4.0.min.js"></script>
 <script src="/js/popper.min.js" crossorigin="anonymous"></script>
 <script src="/js/bootstrap.min.js" crossorigin="anonymous"></script>
-
-<script>
-    function unixToStr(unix_timestamp) {
-        var date = new Date(unix_timestamp*1000);
-        var month = date.getMonth()+1;
-        var day = date.getDate();
-        // Hours part from the timestamp
-        var hours = date.getHours();
-        // Minutes part from the timestamp
-        var minutes = date.getMinutes();
-        // Seconds part from the timestamp
-        // var seconds = date.getSeconds();
-        // Will display time in 10:30:23 format
-        return month + '.' + day + ' ' + hours + ':' + minutes;
-    }
-    $(function () {
-        $.post("/api/v1/dashboard", null, function (data) {
-            // console.log('data ' + JSON.stringify(data));
-            // {"code":999,"error":null,
-            // "result":{"startCount":539732,"syncCount":0,"bestCount":571449,"balance":0}}
-            $("#startCount").text(data.result.startCount);
-            $("#syncCount").text(data.result.syncCount);
-            $("#bestCount").text(data.result.bestCount);
-            $("#balance").text(data.result.balance);
-            $("#wallet-count").text(data.result.walletCount);
-            $("#osname").text(data.result.systemInfo.osName);
-            $("#memusage").text(Math.round(parseFloat(data.result.systemInfo.memoryUsage / data.result.systemInfo.memoryMax * 100).toFixed(2)) + '%');
-            $("#diskusage").text(Math.round(parseFloat(data.result.systemInfo.diskUsage / data.result.systemInfo.diskMax * 100).toFixed(2)) + '%');
-        });
-        $.post("/api/v1/lasttransactions", null, function (data) {
-            // console.log('data ' + JSON.stringify(data));
-            var str = '';
-            if (data.result.txs && data.result.txs.length > 0) {
-                for (var i = 0; i < data.result.txs.length; i++) {
-                    var fee = data.result.txs[i].fee == 0 ? '-' : data.result.txs[i].fee.toFixed(8);
-                    str += '<tr><td scope="row" class="ellipsis">' + data.result.txs[i].uid + '</td>'
-                        + '<td>' + data.result.txs[i].category + '</td>'
-                        + '<td class="ellipsis"><a target="_blank" href="https://live.blockcypher.com/btc-testnet/tx/'
-                        + data.result.txs[i].txid + '">' + data.result.txs[i].txid + '</a></td>'
-                        + '<td class="ellipsis">' + data.result.txs[i].toAddr + '</td>'
-                        + '<td>' + data.result.txs[i].amount.toFixed(8) + '</td>'
-                        + '<td>' + fee + '</td>'
-                        + '<td>' + data.result.txs[i].confirm + '</td>'
-                        + '<td>' + unixToStr(data.result.txs[i].txTime) + '</td></tr>';
-                }
-                $("#txs").html(str);
-            }
-            $("#transaction-count").text(data.result.totalCount);
-        });
-        $.post("/api/v1/geterrors", null, function (data) {
-            // console.log('data ' + JSON.stringify(data));
-            if (data.result === null || typeof (data.result) === 'undefined'
-                || data.result.length < 1) {
-                return;
-            }
-            var str = '';
-            // regDt, id, error
-            for (var i = 0; i < 6; i++) {
-                if (data.result.length>0 && i<data.result.length) {
-                  str += '<tr><td class="text-left">' + data.result[i].error.replace('\n', '<br>') + '</td>'
-                      + '<td class="text-center">' + data.result[i].regDt.substring(5,16).replace('T', ' ')
-                          .replace('-', '.') + '</td></tr>';
-                } else {
-                    str += '<tr><td>&nbsp;</td><td>&nbsp;</td></tr>';
-                }
-            }
-            $("#errors").html(str);
-        });
-    });
-</script>
+<th:block layout:fragment="script"></th:block>
 
 </body>
 </html>

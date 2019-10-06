@@ -1,3 +1,5 @@
+server:
+  port: 80
 logging:
   level:
     root: warn
@@ -5,15 +7,10 @@ logging:
   pattern:
     console: "[%clr(%d{M.d HH:mm:ss}){cyan}] %clr(${LOG_LEVEL_PATTERN}) %msg%n"
 
+# derby example
 # spring.datasource.url=jdbc:derby:crypto;create=true;
 # spring.datasource.driverClassName=org.apache.derby.jdbc.AutoloadedDriver
-
-# JPA / HIBERNATE
-server:
-  port: 80
 spring:
-#  profiles:
-#    include: blockchain
   application:
     name: bitwise-wallet
   datasource:
@@ -34,13 +31,12 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQL5InnoDBDialect
     open-in-view: false
-
+#  profiles:
+#    include: blockchain
 
 
 app:
-  useKafka: false
-  useFcm: false
-  crypto:
+  setting:
     symbol: btc
     testnet: true
     rpcUrl: http://bitflow.ai:50000/wallet/
@@ -49,14 +45,16 @@ app:
     decimals: 8
     blockStartFrom: 1569000
     minConfirm: 3
-    userAccount: btc-users
     pp: 00000000
     testAddress: 333qWatuDDtHRfJjgVcsVNAVvAwCQ114iR
-    ownerAccount: btc-owner
-    ownerAddress: 3P6yoEDNrcZcUs3uMM3RW7qCGFtz8SZbk6
     coldAddress:
     minAmtGather: 0.1
     minGasAmt: 0
+    userAccount: btc-users
+    ownerAccount: btc-owner
+    ownerAddress: 3P6yoEDNrcZcUs3uMM3RW7qCGFtz8SZbk6
+  useKafka: false
+  useFcm: false
 
   blockchain:
     btc:

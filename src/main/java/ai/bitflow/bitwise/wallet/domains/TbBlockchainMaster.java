@@ -1,7 +1,9 @@
 package ai.bitflow.bitwise.wallet.domains;
 
 
+import ai.bitflow.bitwise.wallet.domains.primarykeys.PkSymbolTestnet;
 import lombok.Data;
+import org.hibernate.annotations.ColumnDefault;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -10,6 +12,7 @@ import java.util.Date;
 
 @Entity
 @Data
+@IdClass(PkSymbolTestnet.class)
 public class TbBlockchainMaster implements Serializable {
 
 	private static final long serialVersionUID = 3428902633510996300L;
@@ -19,6 +22,9 @@ public class TbBlockchainMaster implements Serializable {
     private Date updDt;
     @Id
     private String symbol;
+    @Id
+	@Column(columnDefinition = "CHAR(1) not null default 'Y'")
+    private char testnet;
     private long bestHeight;
     private long syncHeight;
     private int decimals;
@@ -28,13 +34,15 @@ public class TbBlockchainMaster implements Serializable {
     private double lastGasUsed;
 
     public TbBlockchainMaster() {}
-    public TbBlockchainMaster(String symbol, String ownerWallet) {
+    public TbBlockchainMaster(String symbol, boolean testnet, String ownerWallet) {
 	    this.symbol = symbol;
+	    this.testnet = testnet?'Y':'N';
 	    this.ownerWallet = ownerWallet;
 	}
-	public TbBlockchainMaster(String symbol, String sendMastAddr, long syncHeight
+	public TbBlockchainMaster(String symbol, boolean testnet, String sendMastAddr, long syncHeight
 			, long latestHeight) {
 	    this.symbol = symbol;
+		this.testnet = testnet?'Y':'N';
 	    this.ownerWallet = sendMastAddr;
 	    this.syncHeight = syncHeight;
 	    this.bestHeight = latestHeight;

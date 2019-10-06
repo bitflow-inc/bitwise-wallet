@@ -1,64 +1,158 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorator="layout/theme">
-<head></head>
+<head>
+<style>
+  .table .btn-sm { padding: .1rem .2rem; font-size: .6rem; }
+</style>
+</head>
 <body>
 
 <th:block layout:fragment="content">
 
-  <div class="row first-row">
-    <div class="col-md-12 col-12 col">
-      <h5>Wallets (Total <span id="wallet-count"></span>)</h5>
-      <table class="table table-bordered table-sm">
-        <thead>
-        <tr>
-          <th scope="col">Wallet Name</th>
-          <th scope="col">Locked</th>
-          <th scope="col">Balance</th>
-          <th scope="col">Addresses</th>
-        </tr>
-        </thead>
-        <tbody id="wallets">
-        <tr>
-          <td colspan="4" class="text-center">지갑이 없습니다</td>
-        </tr>
-        </tbody>
-      </table>
+  <div class="row">
+    <div class="card col-12">
+      <div class="card-body">
+        <h5 style="margin-left: 10px;">
+          <i class="fas fa-wallet"></i>&nbsp;&nbsp;Total - Wallets: <span th:text="${wallets.getCount()}"></span><!--, Addresses: <span id="address-count"></span>-->
+          <button type="button" class="btn btn-info btn-sm float-right">Create Wallet</button>
+        </h5>
+        <div class="row" style="clear:both;">
+          <div class="col-md-6 col-12">
+            <table class="table table-bordered table-sm">
+              <thead>
+              <tr>
+                <th scope="col" style="width: 18%;">UID</th>
+                <th scope="col" style="width: 18%;">Name</th>
+<!--                <th scope="col" style="width: 18%;">Addresses</th>-->
+<!--                <th scope="col" style="width: 18%;">Balance</th>-->
+                <th scope="col" style="width: 28%;">Action</th>
+              </tr>
+              </thead>
+              <tbody>
+                <tr th:each="item : ${wallets.getWalletnames()}" >
+                  <td class="text-center">&nbsp;</td>
+                  <td class="text-center">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" th:text="${item==''?'&nbsp;':item}"
+                            th:attr="data-wallet=${item}" onclick="getaddressinfo(this)"></button>
+                  </td>
+<!--                  <td class="text-center">&nbsp;</td>-->
+<!--                  <td class="text-center">&nbsp;</td>-->
+                  <td class="text-center">
+                    <button type="button" class="btn btn-danger btn-sm">ENCRYPT</button>
+                    &nbsp;
+                    <button type="button" class="btn btn-info btn-sm" data-toggle="modal"
+                            data-target="#transferModal" th:attr="data-wallet=${item}"
+                            onclick="opensenddialog(this)">SEND</button>
+                    &nbsp;
+                    <a href="javascript:void(0);" th:attr="data-wallet=${item}" onclick="getwalletinfo(this)">
+                      <button type="button" class="btn btn-outline-secondary btn-sm">INFO</button>
+                    </a>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="col-md-6 col-12">
+            <table class="table table-bordered table-sm">
+              <thead>
+              <tr>
+                <th scope="col" style="width: 67%;">Address</th>
+                <th scope="col" style="width: 33%;">Purpose</th>
+              </tr>
+              </thead>
+              <tbody id="addresses-parent">
+                <tr>
+                  <td colspan="2" class="text-center">Please choose a wallet</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="col-md-5 col-12">
+          </div>
+        </div>
+      </div>
     </div>
   </div>
+
 </th:block>
 
-<script src="https://kit.fontawesome.com/f66fa7c1ea.js"></script>
+
+<th:block layout:fragment="script">
+
 <script>
-  $(function () {
-    $.post("/api/v1/wallet", null, function (data) {
-      console.log('data ' + JSON.stringify(data));
-      if (data.result === null || typeof (data.result) === 'undefined'
-        || data.result.wallets === null || typeof (data.result.wallets) === 'undefined'
-        || data.result.wallets.length < 1) {
-        return;
+  function getwalletinfo(e) {
+    var walletname = e.getAttribute("data-wallet") ? e.getAttribute("data-wallet") : "";
+    $("#progress-spinner").show();
+    $.post("/api/v1/getwalletinfo/" + walletname, null, function (data) {
+      $("#progress-spinner").hide();
+      if (data && data.result) {
+          // console.log('data ' + JSON.stringify(data.result));
+        var str = '<tr><th>Wallet Name</th><td>\"' + data.result.walletname + '\"</td></tr>'
+            + '<tr><th>Wallet Version</th><td>' + data.result.walletversion + '</td></tr>'
+            + '<tr><th>Address Count</th><td>' + data.result.addressCount + '</td></tr>'
+            + '<tr><th>Balance</th><td>' + data.result.balance + '</td></tr>'
+            + '<tr><th>Unconfirmed Balance</th><td>' + data.result.unconfirmed_balance + '</td></tr>'
+            + '<tr><th>Immature Balance</th><td>' + data.result.immature_balance + '</td></tr>'
+            + '<tr><th>TX Count</th><td>' + data.result.txcount + '</td></tr>'
+            + '<tr><th>Pay TX Fee</th><td>' + data.result.paytxfee + '</td></tr>'
+            + '<tr><th>Private Keys Enabled</th><td>' + data.result.private_keys_enabled + '</td></tr>'
+            + '<tr><th>Wallet Lock</th><td>' + data.result.walletlock + '</td></tr>';
+
+        $("#walletInfos").html(str);
+        $('#walletModal').modal();
       }
-      $("#wallet-count").text(data.result.walletCount);
-      var str = '';
-      for (var i = 0; i < data.result.wallets.length; i++) {
-        var lockicon = data.result.wallets[i].lock===true
-          ?'<i class="fas fa-lock text-muted"></i>'
-          :'<i class="fas fa-lock-open text-danger" onclick="encryptwallet(\''
-          + data.result.wallets[i].name +'\')"></i>';
-        str += '<tr><td scope="row" class="text-center">'
-          + data.result.wallets[i].name + '</td>'
-          + '<td class="text-center">' + lockicon + '</td>'
-          + '<td class="text-right">' + data.result.wallets[i].balance + '</td>'
-          + '</tr>';
-      }
-      $("#wallets").html(str);
     });
-  });
+  }
+
+  function getaddressinfo(e) {
+    var walletname = e.getAttribute("data-wallet") ? e.getAttribute("data-wallet") : "";
+    $("#progress-spinner").show();
+    $.post("/api/v1/getwalletinfo/" + walletname, null, function (data) {
+      $("#progress-spinner").hide();
+      console.log('wallet ' + JSON.stringify(data.result));
+      if (data && data.result) {
+        var str = '';
+        for (var i = 0; i < data.result.addresses.length; i++) {
+          str += '<tr><td>' + data.result.addresses[i] + '</td><td>&nbsp;</td></tr>'
+        }
+        $("#addresses-parent").html(str);
+      }
+    });
+  }
+
+  function opensenddialog(e) {
+      var walletname = e.getAttribute("data-wallet")?e.getAttribute("data-wallet"):"";
+      console.log("data-wallet " + walletname);
+      $("#fromWallet").text("\"" + walletname + "\"");
+      var walletname = e.getAttribute("data-wallet") ? e.getAttribute("data-wallet") : "";
+      $("#progress-spinner").show();
+      $.post("/api/v1/getwalletinfo/" + walletname, null, function (data) {
+          $("#progress-spinner").hide();
+          if (data && data.result) {
+              var balance = data.result.balance;
+              console.log('typeof ' + typeof(balance));
+              $("#fromBalance").text(balance);
+              $("#btn-amt-10").attr("data-amt", Math.round(balance*10000000*0.1)/10000000);
+              $("#btn-amt-25").attr("data-amt", Math.round(balance*10000000*0.25)/10000000);
+              $("#btn-amt-50").attr("data-amt", Math.round(balance*10000000*0.5)/10000000);
+              $("#btn-amt-75").attr("data-amt", Math.round(balance*10000000*0.75)/10000000);
+              $("#btn-amt-100").attr("data-amt", balance);
+          }
+      });
+
+  }
+
+  function setAmount(btn) {
+      $("#send-amt").val(btn.getAttribute("data-amt"));
+  }
 
   function encryptwallet(walletname) {
-    //
+    // Todo
   }
 </script>
+
+</th:block>
 
 </body>
 </html>

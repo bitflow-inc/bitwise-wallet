@@ -7,6 +7,7 @@ import ai.bitflow.bitwise.wallet.gsonObjects.NewAddressResponse;
 import ai.bitflow.bitwise.wallet.gsonObjects.apiParameters.*;
 import ai.bitflow.bitwise.wallet.gsonObjects.apiResponse.*;
 import ai.bitflow.bitwise.wallet.gsonObjects.bitcoin.GetTransaction;
+import ai.bitflow.bitwise.wallet.gsonObjects.bitcoin.GetWalletInfo;
 import ai.bitflow.bitwise.wallet.gsonObjects.common.BitcoinDoubleResponse;
 import ai.bitflow.bitwise.wallet.services.abstracts.BitcoinService;
 import lombok.extern.slf4j.Slf4j;
@@ -15,22 +16,19 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 
 @Slf4j
 @Controller
 @RequestMapping(value="/api/v1")
-public class BitwiseWalletApiController implements BlockchainConstant {
+public class BitwiseApiController implements BlockchainConstant {
 
     @Autowired
     private BitcoinService service;
 
     /**
-     * AJAX API for Dashboard UI
+     * Dashboard page API
      * @return
      */
     @ResponseBody
@@ -42,17 +40,17 @@ public class BitwiseWalletApiController implements BlockchainConstant {
     // SettingRepository
 
     /**
-     * AJAX API for Dashboard UI
+     * Dashboard page API
      * @return
      */
-    @ResponseBody
-    @RequestMapping(value="/wallet", method= RequestMethod.POST)
-    public WalletAjaxResponse wallet() {
-        return service.getWalletsInfo();
-    }
+//    @ResponseBody
+//    @RequestMapping(value="/wallet", method= RequestMethod.POST)
+//    public WalletAjaxResponse wallet() {
+//        return service.getWalletsInfo();
+//    }
 
     /**
-     * AJAX API for Dashboard UI
+     * Dashboard page API
      * @return
      */
     @ResponseBody
@@ -65,7 +63,7 @@ public class BitwiseWalletApiController implements BlockchainConstant {
     }
 
     /**
-     * AJAX API for Dashboard UI
+     * Dashboard page API
      * @return
      */
     @ResponseBody
@@ -118,10 +116,23 @@ public class BitwiseWalletApiController implements BlockchainConstant {
     }
 
     @ResponseBody
+    @RequestMapping(value="/getwalletinfo/", method= RequestMethod.POST)
+    public GetWalletInfo getwalletinfo() {
+        return service.getWalletInfo("");
+    }
+
+    @ResponseBody
+    @RequestMapping(value="/getwalletinfo/{uid}", method= RequestMethod.POST)
+    public GetWalletInfo getwalletinfo(@PathVariable String uid) {
+        return service.getWalletInfo(uid);
+    }
+
+    @ResponseBody
     @RequestMapping(value="/listwallets", method= RequestMethod.POST)
     public ListWalletResponse listwallets() {
         return service.listwallets();
     }
+
 
     /**
      * 새 주소 생성

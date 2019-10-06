@@ -2,11 +2,14 @@ package ai.bitflow.bitwise.wallet.daos;
 
 import ai.bitflow.bitwise.wallet.domains.TbBlockchainMaster;
 import ai.bitflow.bitwise.wallet.domains.TbTrans;
+import ai.bitflow.bitwise.wallet.domains.primarykeys.PkSymbolTestnet;
 import ai.bitflow.bitwise.wallet.repositories.BlockchainMasterRepository;
 import ai.bitflow.bitwise.wallet.repositories.TransactionRepository;
+import ai.bitflow.bitwise.wallet.services.abstracts.BitcoinService;
 import ai.bitflow.bitwise.wallet.services.abstracts.BlockchainCommonService;
 import ai.bitflow.bitwise.wallet.services.interfaces.OwnChain;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -18,39 +21,49 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 
+@Slf4j
 @Repository
-public class BlockchainCommonDao {
+public abstract class BlockchainDao {
 
-    @Getter @Value("${app.crypto.symbol}")
+    @Getter @Value("${app.setting.symbol}")
     private String symbol;
-    @Getter @Value("${app.crypto.testnet}")
+    @Getter @Value("${app.setting.testnet}")
     private boolean testnet;
     @Autowired
-    protected BlockchainMasterRepository blockchainMaster;
+    private BlockchainMasterRepository blockchainMaster;
     @Autowired
-    protected TransactionRepository transaction;
+    private TransactionRepository transaction;
+    abstract long getBestBlockCount(BitcoinService ctx) throws Exception;
+    abstract List<String> getAllAddressListFromNode(BitcoinService ctx, String uid);
+    abstract Set<String> getAllAddressSetFromNode();
 
     /**
      * DB에서 마스터 테이블 조회하는 경우
      * @return
      */
     public TbBlockchainMaster getBlockchainMaster(BlockchainCommonService ctx) {
-        Optional<TbBlockchainMaster> obj = blockchainMaster.findById(ctx.getSymbol());
+        PkSymbolTestnet pk = new PkSymbolTestnet(getSymbol(), isTestnet()?'Y':'N');
+        Optional<TbBlockchainMaster> obj = blockchainMaster.findById(pk);
         TbBlockchainMaster master = null;
         if (obj.isPresent()) {
             // 기존 데이터가 있으면
+            log.debug("Master exists");
             master = obj.get();
         } else {
+            log.debug("Master doest not exist");
             if (this instanceof OwnChain) {
-                // 메인 체인의 코인이면 (not token)
-                master = new TbBlockchainMaster(ctx.getSymbol(), ctx.getOwnerAddress(),
+                // 1) Case of Coin
+                master = new TbBlockchainMaster(ctx.getSymbol(),
+                        ctx.isTestnet(),
+                        ctx.getOwnerAddress(),
                         ((OwnChain)this).getBlockStartFrom(),
                         ((OwnChain)this).getBlockStartFrom());
             } else {
-                // 토큰이면
-                master = new TbBlockchainMaster(ctx.getSymbol(), ctx.getOwnerAddress());
+                // 2) Case of Token
+                master = new TbBlockchainMaster(ctx.getSymbol(), ctx.isTestnet(), ctx.getOwnerAddress());
             }
             blockchainMaster.save(master);
         }
@@ -90,9 +103,9 @@ public class BlockchainCommonDao {
     }
 
     /**
-     * 출금내역)
-     * 1) 거래소의 경우  KAFKA 객체로 변환하여 전송
-     * 2) 프라이빗 세일의 경우 구매상태 변경
+     * 입출금 처리상태 변동 시
+     * 1) 거래소의 경우 KAFKA로 알림
+     * 2) 모바일 월렛의 경우 FCM 알림
      * @param trans
      * @return
      */

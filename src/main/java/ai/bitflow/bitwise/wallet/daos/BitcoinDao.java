@@ -3,7 +3,6 @@ package ai.bitflow.bitwise.wallet.daos;
 import ai.bitflow.bitwise.wallet.components.Logger;
 import ai.bitflow.bitwise.wallet.constants.Bitcoin0170Constant;
 import ai.bitflow.bitwise.wallet.constants.abstracts.BlockchainConstant;
-import ai.bitflow.bitwise.wallet.daos.abstracts.BlockchainSharedIf;
 import ai.bitflow.bitwise.wallet.domains.TbError;
 import ai.bitflow.bitwise.wallet.domains.TbTrans;
 import ai.bitflow.bitwise.wallet.gsonObjects.apiParameters.SendToAddressRequest;
@@ -15,6 +14,7 @@ import ai.bitflow.bitwise.wallet.services.abstracts.BitcoinService;
 import ai.bitflow.bitwise.wallet.services.interfaces.LockableWallet;
 import ai.bitflow.bitwise.wallet.utils.JsonRpcUtil;
 import com.google.gson.Gson;
+import com.google.gson.internal.LinkedTreeMap;
 import lombok.Getter;
 import org.apache.http.client.ClientProtocolException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,18 +24,15 @@ import org.springframework.stereotype.Repository;
 import javax.persistence.EntityManagerFactory;
 import java.io.IOException;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 @Repository
-public class BitcoinDao implements BlockchainSharedIf, Bitcoin0170Constant,
+public class BitcoinDao extends BlockchainDao implements Bitcoin0170Constant,
         BlockchainConstant, LockableWallet {
 
     @Getter
-    @Value("${app.crypto.pp}") private String passphrase;
+    @Value("${app.setting.pp}") private String passphrase;
     @Autowired
     protected Logger log;
     @Autowired
@@ -148,6 +145,52 @@ public class BitcoinDao implements BlockchainSharedIf, Bitcoin0170Constant,
         }
     }
 
+    public LinkedTreeMap getAddressesByLabel(BitcoinService ctx, String walletId)
+            throws Exception {
+        String[] params = new String[1];
+        params[0] = "\"\"";
+        // 시작블럭 해시 가져오기
+        BitcoinObjectResponse res = gson.fromJson(
+                JsonRpcUtil.sendJsonRpcBasicAuth(ctx.getRpcUrl() + walletId,
+                        METHOD_GETADDRBYLABEL, params, ctx.getRpcId(),
+                        ctx.getRpcPw()), BitcoinObjectResponse.class);
+        if (res==null) {
+            log.error(METHOD_GETADDRBYLABEL, "null");
+            throw new Exception(METHOD_GETADDRBYLABEL + ": Null");
+        } else if (res.getError()!=null) {
+            throw new Exception(METHOD_GETADDRBYLABEL + ": " + res.getError());
+        } else {
+            return res.getResult();
+        }
+    }
+    /**
+     * 해당 월렛의 모든 주소 반환
+     * @param uid
+     * @return
+     * @throws Exception
+     */
+    @Override
+    public List<String> getAllAddressListFromNode(BitcoinService ctx, String uid) {
+
+        List<String> ret = new ArrayList<>();
+        try {
+            LinkedTreeMap addressMap = getAddressesByLabel(ctx, uid);
+            Iterator<String> it = addressMap.keySet().iterator();
+            while(it.hasNext()) {
+                ret.add(it.next());
+            }
+        } catch (Exception e) {
+            TbError item = new TbError("getDashboardData", e);
+            error.save(item);
+        }
+        return ret;
+    }
+
+    @Override
+    public Set<String> getAllAddressSetFromNode() {
+        return null;
+    }
+
     /**
      *
      * @param blockhash
@@ -181,21 +224,36 @@ public class BitcoinDao implements BlockchainSharedIf, Bitcoin0170Constant,
 
     public ListSinceBlock listSinceBlock(BitcoinService ctx,
                                          String walletId, String startBlockHash) throws IOException {
-        String[] params3 = new String[1];
-        params3[0] = "\"" + startBlockHash + "\"";
+        String[] params = new String[1];
+        params[0] = "\"" + startBlockHash + "\"";
         // 내 트랜잭션만 반환
         String resStr = JsonRpcUtil.sendJsonRpcBasicAuth(ctx.getRpcUrl()
-                + walletId, METHOD_LISTSINCEBLOCK, params3,
+                + walletId, METHOD_LISTSINCEBLOCK, params,
                 ctx.getRpcId(), ctx.getRpcPw());
         return gson.fromJson(resStr, ListSinceBlock.class);
     }
 
     public GetWalletInfo getWalletInfo(BitcoinService ctx, String uid)
             throws IOException {
-        String resStr = JsonRpcUtil.sendJsonRpcBasicAuth(ctx.getRpcUrl()
+
+        String[] params1 = new String[2];
+        params1[0] = "\"00000000\""; // Dummy PW to check
+        params1[1] = "1";
+        String resStr1 = JsonRpcUtil.sendJsonRpcBasicAuth(ctx.getRpcUrl()
                         + uid, METHOD_GETWALLETINFO, null,
                 ctx.getRpcId(), ctx.getRpcPw());
-        return gson.fromJson(resStr, GetWalletInfo.class);
+        GetWalletInfo ret1 = gson.fromJson(resStr1, GetWalletInfo.class);
+
+        String resStr2 = JsonRpcUtil.sendJsonRpcBasicAuth(ctx.getRpcUrl()
+                        + uid, METHOD_WALLETPP, params1,
+                ctx.getRpcId(), ctx.getRpcPw());
+        BitcoinStringResponse ret2 = gson.fromJson(resStr2, BitcoinStringResponse.class);
+        if (ret2.getError()!=null && ret2.getError().getCode()==ERR_CD_WALLET_UNENC) {
+            ret1.getResult().setWalletlock(false);
+        } else if (ret2.getError()==null) {
+            ret1.getResult().setWalletlock(true);
+        }
+        return ret1;
     }
 
     public ListAddressGroupings listAddressGroupings(BitcoinService ctx,

@@ -49,6 +49,7 @@ dependencies {
     compile "org.aspectj:aspectjweaver:1.8.13"
     compile "com.google.code.gson:gson:2.8.5"
     compile "org.json:json:20180130"
+    compile group: 'javax.inject', name: 'javax.inject', version: '1'
 
     compile group: 'org.mariadb.jdbc', name: 'mariadb-java-client', version: '2.4.3'
 

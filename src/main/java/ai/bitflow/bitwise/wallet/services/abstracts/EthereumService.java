@@ -111,13 +111,13 @@ public abstract class EthereumService extends BlockchainCommonService implements
         }
     }
     
-    @Override public List<String> getAllAddressListFromNode() {
+    public List<String> getAllAddressListFromNode() {
         String[] ret = getAllAddressArray();
         if (ret==null) { return null; }
         return (List<String>) Arrays.asList(ret);
     }
-    
-    @Override public Set<String> getAllAddressSetFromNode() {
+
+    public Set<String> getAllAddressSetFromNode() {
         // gets all addresses from ETH node
         String[] userarr = getAllAddressArray();
         if (userarr==null) { return null; }
@@ -127,7 +127,7 @@ public abstract class EthereumService extends BlockchainCommonService implements
         }
         return users;
     }
-    
+
     /**
      * Any 42 character string starting with 0x, and following with 0-9, A-F, a-f (valid hex characters)
      * represent a valid Ethereum address. Pattern is ^(0x)?[a-zA-Z0-9]*$
@@ -230,7 +230,7 @@ public abstract class EthereumService extends BlockchainCommonService implements
         
         // 1) 출금 진행중인 건 조회: TXID가 있고 거래소에 알리지 않은 건
         boolean success = true;
-        TbBlockchainMaster master = commonDao.getBlockchainMaster(this);
+        TbBlockchainMaster master = blockchainDao.getBlockchainMaster(this);
         long lastestHeight = master.getBestHeight();
         List<TbTrans> data = getSendTXToUpdate(symbol);
         
@@ -292,7 +292,7 @@ public abstract class EthereumService extends BlockchainCommonService implements
                     }
                 }
                 if (notify) {
-                    commonDao.notifyFrontEnd(datum);
+                    blockchainDao.notifyFrontEnd(datum);
                 }
                 transactions.save(datum);
             }
@@ -359,7 +359,7 @@ public abstract class EthereumService extends BlockchainCommonService implements
         gasPrice = getGasPrice();
         if (gasPrice.compareTo(BigInteger.ZERO)==1) {
         	// 0보다 크면
-            TbBlockchainMaster master = commonDao.getBlockchainMaster(this);
+            TbBlockchainMaster master = blockchainDao.getBlockchainMaster(this);
             master.setLastGasPrice(Convert.fromWei(new BigDecimal(gasPrice),
             		Unit.GWEI).doubleValue());
 //            blockchainMaster.save(master);
@@ -459,7 +459,7 @@ public abstract class EthereumService extends BlockchainCommonService implements
      */
     public boolean openBlocksGetTxsThenSaveSingle() {
         
-        TbBlockchainMaster master = commonDao.getBlockchainMaster(this);
+        TbBlockchainMaster master = blockchainDao.getBlockchainMaster(this);
         long currentHeight = master.getSyncHeight();
         long lastestHeight = master.getBestHeight();
         
