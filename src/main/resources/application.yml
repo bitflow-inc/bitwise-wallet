@@ -31,9 +31,6 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQL5InnoDBDialect
     open-in-view: false
-#  profiles:
-#    include: blockchain
-
 
 app:
   setting:
@@ -55,89 +52,3 @@ app:
     ownerAddress: 3P6yoEDNrcZcUs3uMM3RW7qCGFtz8SZbk6
   useKafka: false
   useFcm: false
-
-  blockchain:
-    btc:
-      homepage: https://bitcoin.org
-      mainnet:
-        port: 8332
-        explorer_main: https://live.blockcypher.com/btc
-        explorer_tx: https://live.blockcypher.com/btc/tx/
-        faucet:
-      testnet:
-        port: 18332
-        explorer_main: https://live.blockcypher.com/btc-testnet
-        explorer_tx: https://live.blockcypher.com/btc-testnet/tx/
-        faucet: https://testnet-faucet.mempool.co
-    ltc:
-      homepage: https://litecoin.org
-      mainnet:
-        port: 9333
-        explorer_main: https://live.blockcypher.com/ltc
-        explorer_tx: https://live.blockcypher.com/ltc/tx/
-        faucet:
-      testnet:
-        port: 19335
-        explorer_main: https://blockexplorer.one/litecoin/testnet
-        explorer_tx: https://blockexplorer.one/litecoin/testnet/tx/
-        faucet: http://testnet.litecointools.com
-    bch:
-      homepage: https://www.bitcoinabc.org
-      mainnet:
-        port: 8333
-        explorer_main: https://explorer.bitcoin.com/bch
-        explorer_tx: https://explorer.bitcoin.com/bch/tx/
-        faucet:
-      testnet:
-        port: 18333
-        explorer_main: https://explorer.bitcoin.com/tbch
-        explorer_tx: https://explorer.bitcoin.com/tbch/tx/
-        faucet: https://developer.bitcoin.com/faucets/bch
-    bsv:
-      homepage: https://bitcoinsv.io
-      mainnet:
-        port: 8333
-        explorer_main: https://bchsvexplorer.com
-        explorer_tx: https://bchsvexplorer.com/tx/
-        faucet:
-      testnet:
-        port: 18333
-        explorer_main: https://testnet.bitcoincloud.net
-        explorer_tx: https://testnet.bitcoincloud.net/tx/
-        faucet: https://faucet.bitcoincloud.net
-    doge:
-      homepage: https://dogecoin.com
-      mainnet:
-        port: 8333
-        explorer_main: https://dogechain.info
-        explorer_tx: https://dogechain.info/tx/
-        faucet:
-      testnet:
-        port: 18333
-        explorer_main: https://chain.so/testnet/doge
-        explorer_tx: https://chain.so/tx/DOGETEST/
-        faucet: https://doge-faucet-testnet.ggcorp.fr
-    btg:
-      homepage: https://bitcoingold.org
-      mainnet:
-        port: 8333
-        explorer_main: https://explorer.bitcoingold.org/insight
-        explorer_tx: https://explorer.bitcoingold.org/insight/tx/
-        faucet:
-      testnet:
-        port: 18333
-        explorer_main: https://test-explorer.bitcoingold.org/insight
-        explorer_tx: https://test-explorer.bitcoingold.org/insight/tx/
-        faucet: https://test-faucet.bitcoingold.org
-    bcd:
-      homepage: https://www.bitcoindiamond.org
-      mainnet:
-        port: 8333
-        explorer_main: http://explorer.btcd.io
-        explorer_tx: http://explorer.btcd.io/#/tx?tx=
-        faucet:
-      testnet:
-        port: 18333
-        explorer_main:
-        explorer_tx:
-        faucet:

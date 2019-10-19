@@ -1,6 +1,6 @@
 package ai.bitflow.bitwise.wallet.services.abstracts;
 
-import ai.bitflow.bitwise.wallet.components.Logger;
+import ai.bitflow.bitwise.wallet.utils.Logger;
 import ai.bitflow.bitwise.wallet.constants.abstracts.BlockchainConstant;
 import ai.bitflow.bitwise.wallet.daos.BlockchainDao;
 import ai.bitflow.bitwise.wallet.domains.TbBlockchainMaster;

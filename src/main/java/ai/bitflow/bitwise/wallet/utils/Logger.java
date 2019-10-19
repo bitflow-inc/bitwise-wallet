@@ -1,4 +1,4 @@
-package ai.bitflow.bitwise.wallet.components;
+package ai.bitflow.bitwise.wallet.utils;
 
 import ai.bitflow.bitwise.wallet.gsonObjects.abstracts.RpcError;
 import lombok.extern.slf4j.Slf4j;

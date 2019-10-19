@@ -41,18 +41,6 @@ public class BitwiseApiController implements BlockchainConstant {
         return service.getDashboardData();
     }
 
-    // SettingRepository
-
-    /**
-     * Dashboard page API
-     * @return
-     */
-//    @ResponseBody
-//    @RequestMapping(value="/wallet", method= RequestMethod.POST)
-//    public WalletAjaxResponse wallet() {
-//        return service.getWalletsInfo();
-//    }
-
     /**
      * Dashboard page API
      * @return

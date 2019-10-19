@@ -1,6 +1,10 @@
 package ai.bitflow.bitwise.wallet.utils;
 
 import ai.bitflow.bitwise.wallet.constants.abstracts.BlockchainConstant;
+import ai.bitflow.bitwise.wallet.services.BlockchainConfig;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import org.springframework.core.io.ClassPathResource;
 import org.web3j.utils.Convert;
 import org.web3j.utils.Numeric;
 
@@ -16,6 +20,9 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+/**
+ * 문자열/날자 변환 등 형 변환 전문 유틸
+ */
 public class ConvertUtil {
 
     private static final String ISO_FORMAT    = "yyyy-MM-dd'T'HH:mm:ss"; // .SSS zzz
@@ -50,6 +57,18 @@ public class ConvertUtil {
     public static int getTestRandomInt() {
         Random rand = new SecureRandom();
         return rand.nextInt(999999999);
+    }
+
+    public static String convertYamlToJson(String yaml) throws Exception {
+        ObjectMapper yamlReader = new ObjectMapper(new YAMLFactory());
+        Object obj = yamlReader.readValue(yaml, Object.class);
+        ObjectMapper jsonWriter = new ObjectMapper();
+        return jsonWriter.writeValueAsString(obj);
+    }
+
+    public static BlockchainConfig getBlockchainConfig() throws Exception {
+        ObjectMapper yamlReader = new ObjectMapper(new YAMLFactory());
+        return yamlReader.readValue(new ClassPathResource("blockchain.yml").getFile(), BlockchainConfig.class);
     }
 
     /**
@@ -88,10 +107,12 @@ public class ConvertUtil {
             return null;
         }
     }
+
     public static String longToHex(long longval) {
         return "0x"
                 + Long.toHexString(longval);
     }
+
     public static Long hexToLong(String hexval) {
         return new BigInteger
                 (hexval.substring(2), 16).longValue();
@@ -102,23 +123,29 @@ public class ConvertUtil {
                 Convert.toWei(BigDecimal.valueOf(ethval), Convert.Unit.ETHER)
                         .toBigInteger());
     }
+
     public static String tokenAmountToHex(double tokenval, int decimals) {
         return Numeric.toHexStringNoPrefix(BigDecimal.valueOf(tokenval)
                 .multiply(BigDecimal.TEN.pow(decimals)).toBigInteger());
     }
+
     public static double hexToEth(String hexval) {
         return Convert.fromWei(new BigDecimal(Numeric.toBigInt(hexval))
                 , Convert.Unit.ETHER).doubleValue();
     }
+
     public static Long hexToWei(String hex) {
         return hexToLong(hex);
     }
+
     public static String weiToHex(Long wei) {
         return "0x" + Long.toHexString(wei);
     }
+
     public static BigInteger ethToWei(double ethval) {
         return Convert.toWei(BigDecimal.valueOf(ethval), Convert.Unit.ETHER).toBigInteger();
     }
+
     public static double ethToGWei(double ethval) {
         return Convert.fromWei(Convert.toWei(BigDecimal.valueOf(ethval), Convert.Unit.ETHER)
                 , Convert.Unit.GWEI).doubleValue();
@@ -200,12 +227,15 @@ public class ConvertUtil {
     public static String toCurrencyFormat(Double number) {
         return String.format("%,.4f", number);
     }
+
     public static String toCurrencyFormat8(Double number) {
         NumberFormat nf = NumberFormat.getInstance();
         return nf.format(number);
     }
+
     public static String toCurrencyFormat8Int(Double number) {
         NumberFormat nf = NumberFormat.getInstance();
         return nf.format(number.intValue());
     }
+
 }

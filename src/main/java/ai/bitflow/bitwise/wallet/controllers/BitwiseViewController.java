@@ -1,7 +1,9 @@
 package ai.bitflow.bitwise.wallet.controllers;
 
 import ai.bitflow.bitwise.wallet.gsonObjects.apiResponse.ListWalletResponse;
+import ai.bitflow.bitwise.wallet.services.BlockchainConfig;
 import ai.bitflow.bitwise.wallet.services.abstracts.BitcoinService;
+import ai.bitflow.bitwise.wallet.utils.ConvertUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -35,6 +37,13 @@ public class BitwiseViewController {
         service.getBlockchainData(model);
         service.getBlockchainData(model);
         model.addAttribute("menuIdx", MENU_IDX_DASHBOARD);
+
+        try {
+            log.debug("blockchain config " + ConvertUtil.getBlockchainConfig().toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         return "index";
     }
 

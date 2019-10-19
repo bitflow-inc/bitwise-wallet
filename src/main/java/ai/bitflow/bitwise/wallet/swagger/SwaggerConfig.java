@@ -1,4 +1,4 @@
-package ai.bitflow.bitwise.wallet.configs;
+package ai.bitflow.bitwise.wallet.swagger;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

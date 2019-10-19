@@ -1,0 +1,91 @@
+btc:
+  homepage: https://bitcoin.org
+  minConfirm: 3
+  mainnet:
+    port: 8332
+    explorerMain: https://live.blockcypher.com/btc
+    explorerTx: https://live.blockcypher.com/btc/tx/
+    faucet:
+  testnet:
+    port: 18332
+    explorerMain: https://live.blockcypher.com/btc-testnet
+    explorerTx: https://live.blockcypher.com/btc-testnet/tx/
+    faucet: https://testnet-faucet.mempool.co
+ltc:
+  homepage: https://litecoin.org
+  minConfirm: 3
+  mainnet:
+    port: 9333
+    explorerMain: https://live.blockcypher.com/ltc
+    explorerTx: https://live.blockcypher.com/ltc/tx/
+    faucet:
+  testnet:
+    port: 19335
+    explorerMain: https://blockexplorer.one/litecoin/testnet
+    explorerTx: https://blockexplorer.one/litecoin/testnet/tx/
+    faucet: http://testnet.litecointools.com
+bch:
+  homepage: https://www.bitcoinabc.org
+  minConfirm: 3
+  mainnet:
+    port: 8333
+    explorerMain: https://explorer.bitcoin.com/bch
+    explorerTx: https://explorer.bitcoin.com/bch/tx/
+    faucet:
+  testnet:
+    port: 18333
+    explorerMain: https://explorer.bitcoin.com/tbch
+    explorerTx: https://explorer.bitcoin.com/tbch/tx/
+    faucet: https://developer.bitcoin.com/faucets/bch
+bsv:
+  homepage: https://bitcoinsv.io
+  minConfirm: 3
+  mainnet:
+    port: 8333
+    explorerMain: https://bchsvexplorer.com
+    explorerTx: https://bchsvexplorer.com/tx/
+    faucet:
+  testnet:
+    port: 18333
+    explorerMain: https://testnet.bitcoincloud.net
+    explorerTx: https://testnet.bitcoincloud.net/tx/
+    faucet: https://faucet.bitcoincloud.net
+doge:
+  homepage: https://dogecoin.com
+  minConfirm: 3
+  mainnet:
+    port: 8333
+    explorerMain: https://dogechain.info
+    explorerTx: https://dogechain.info/tx/
+    faucet:
+  testnet:
+    port: 18333
+    explorerMain: https://chain.so/testnet/doge
+    explorerTx: https://chain.so/tx/DOGETEST/
+    faucet: https://doge-faucet-testnet.ggcorp.fr
+btg:
+  homepage: https://bitcoingold.org
+  minConfirm: 3
+  mainnet:
+    port: 8333
+    explorerMain: https://explorer.bitcoingold.org/insight
+    explorerTx: https://explorer.bitcoingold.org/insight/tx/
+    faucet:
+  testnet:
+    port: 18333
+    explorerMain: https://test-explorer.bitcoingold.org/insight
+    explorerTx: https://test-explorer.bitcoingold.org/insight/tx/
+    faucet: https://test-faucet.bitcoingold.org
+bcd:
+  homepage: https://www.bitcoindiamond.org
+  minConfirm: 3
+  mainnet:
+    port: 8333
+    explorerMain: http://explorer.btcd.io
+    explorerTx: http://explorer.btcd.io/#/tx?tx=
+    faucet:
+  testnet:
+    port: 18333
+    explorerMain:
+    explorerTx:
+    faucet:

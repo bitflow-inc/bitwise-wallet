@@ -1,6 +1,6 @@
 package ai.bitflow.bitwise.wallet.daos;
 
-import ai.bitflow.bitwise.wallet.components.Logger;
+import ai.bitflow.bitwise.wallet.utils.Logger;
 import ai.bitflow.bitwise.wallet.constants.Bitcoin0170Constant;
 import ai.bitflow.bitwise.wallet.constants.abstracts.BlockchainConstant;
 import ai.bitflow.bitwise.wallet.domains.TbError;
