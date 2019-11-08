@@ -23,8 +23,8 @@
             <table class="table table-bordered table-sm">
               <thead>
               <tr>
-                <th scope="col" style="width: 18%;">UID</th>
-                <th scope="col" style="width: 18%;">Name</th>
+                <th scope="col" style="width: 18%;">Owner UID</th>
+                <th scope="col" style="width: 18%;">Wallet Name</th>
 <!--                <th scope="col" style="width: 18%;">Addresses</th>-->
 <!--                <th scope="col" style="width: 18%;">Balance</th>-->
                 <th scope="col" style="width: 28%;">Action</th>
@@ -49,7 +49,7 @@
                     </a>
                       &nbsp;
                     <a href="javascript:void(0);" th:attr="data-wallet=${item}" onclick="getnewaddress(this)">
-                      <button type="button" class="btn btn-outline-secondary btn-sm">NEW ADDRESS</button>
+                      <button type="button" class="btn btn-outline-secondary btn-sm">+ADDRESS</button>
                     </a>
                   </td>
                 </tr>
