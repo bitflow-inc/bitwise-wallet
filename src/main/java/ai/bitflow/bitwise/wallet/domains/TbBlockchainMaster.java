@@ -34,7 +34,9 @@ public class TbBlockchainMaster implements Serializable {
 	private String ownerWallet;
 	private double lastGasPrice;
     private double lastGasUsed;
-
+    @Column(columnDefinition = "CHAR(1) not null default 'Y'")
+    private char rpcOk;
+    
     public TbBlockchainMaster() {}
     public TbBlockchainMaster(String symbol, boolean testnet, String ownerWallet) {
 	    this.symbol = symbol;

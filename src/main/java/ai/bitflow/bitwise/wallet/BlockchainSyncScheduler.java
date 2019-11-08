@@ -1,14 +1,19 @@
 package ai.bitflow.bitwise.wallet;
 
-import ai.bitflow.bitwise.wallet.constants.abstracts.BlockchainConstant;
-import ai.bitflow.bitwise.wallet.interceptors.LogExecutionTime;
-import ai.bitflow.bitwise.wallet.services.abstracts.BlockchainCommonService;
-import ai.bitflow.bitwise.wallet.services.interfaces.OwnChain;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+
+import ai.bitflow.bitwise.wallet.constants.abstracts.BlockchainConstant;
+import ai.bitflow.bitwise.wallet.interceptors.LogExecutionTime;
+import ai.bitflow.bitwise.wallet.services.ServiceFactory;
+import ai.bitflow.bitwise.wallet.services.abstracts.BlockchainCommonService;
+import ai.bitflow.bitwise.wallet.services.interfaces.OwnChain;
+import lombok.Data;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 
 /**
@@ -26,11 +31,16 @@ public class BlockchainSyncScheduler implements BlockchainConstant {
 	private final int SEC_5_CNT = 4;            // 5000 * 4
 	private final int MIN_1    	= 12;           // 5000 * 12
 	private final int HOUR_3   	= 12 * 60 * 3;  // 5000 * 12 * 60 * 3
+	
 	private int count;
+	@Value("${app.setting.symbol}") 
+	private String symbol;
 	
 	@Autowired
+	private ServiceFactory serviceFactory;
     private BlockchainCommonService service;
 
+    
 	/**
 	 * 동기화 배치 스케줄러
 	 */
@@ -40,15 +50,17 @@ public class BlockchainSyncScheduler implements BlockchainConstant {
       
         boolean success = false;
 
+        service = serviceFactory.getService(symbol);
+        
         // 1) 15초마다 => 블록체인 기본 정보 업데이트
         if (count%SEC_5_CNT==0) {
             try {
                 success = service.syncBlockchainMaster();
                 if (!success) {
-                    log.error(TAG + "[syncBlockchainMaster] unsuccessful");
+                    log.error(TAG + "[syncMaster] unsuccessful");
                 }
             } catch (Exception e) {
-              log.error(TAG + "[syncBlockchainMaster] " + e.getMessage());
+              log.error(TAG + "[syncMaster] " + e.getMessage());
                 e.printStackTrace();
             }
         }
@@ -60,7 +72,7 @@ public class BlockchainSyncScheduler implements BlockchainConstant {
         if (count%SEC_5_CNT==1) {
             if (service instanceof OwnChain) {
             	try {
-                    success = ((OwnChain)service).openBlocksGetTxsThenSave();
+                    success = service.openBlocksGetTxsThenSave();
                     if (!success) {
                         log.error(TAG + "[openBlocksGetTxsThenSave] unsuccessful");
                     }
@@ -87,16 +99,6 @@ public class BlockchainSyncScheduler implements BlockchainConstant {
         }
 
         success = false;
-
-        // 4) 15초 마다 => 실패한 트랜잭션 알림
-//        if (count%SEC_5_CNT==3) {
-//            try {
-//                success = service.notifyTXsFailedNotNotified();
-//                if (!success) {
-//                    log.error(TAG + "[notifyfailed] failed");
-//                }
-//            } catch (Exception e) { e.printStackTrace(); }
-//        }
 
         count++;
         if (count>=100) { count = 0; }

@@ -15,12 +15,12 @@ ltc:
   homepage: https://litecoin.org
   minConfirm: 3
   mainnet:
-    port: 9333
+    port: 9332
     explorerMain: https://live.blockcypher.com/ltc
     explorerTx: https://live.blockcypher.com/ltc/tx/
     faucet:
   testnet:
-    port: 19335
+    port: 19332
     explorerMain: https://blockexplorer.one/litecoin/testnet
     explorerTx: https://blockexplorer.one/litecoin/testnet/tx/
     faucet: http://testnet.litecointools.com
@@ -41,12 +41,12 @@ bsv:
   homepage: https://bitcoinsv.io
   minConfirm: 3
   mainnet:
-    port: 8333
+    port: 8332
     explorerMain: https://bchsvexplorer.com
     explorerTx: https://bchsvexplorer.com/tx/
     faucet:
   testnet:
-    port: 18333
+    port: 18332
     explorerMain: https://testnet.bitcoincloud.net
     explorerTx: https://testnet.bitcoincloud.net/tx/
     faucet: https://faucet.bitcoincloud.net
@@ -62,7 +62,7 @@ doge:
     port: 18333
     explorerMain: https://chain.so/testnet/doge
     explorerTx: https://chain.so/tx/DOGETEST/
-    faucet: https://doge-faucet-testnet.ggcorp.fr
+    faucet: https://www.dogefaucet.com/en
 btg:
   homepage: https://bitcoingold.org
   minConfirm: 3
@@ -80,12 +80,12 @@ bcd:
   homepage: https://www.bitcoindiamond.org
   minConfirm: 3
   mainnet:
-    port: 8333
+    port: 7116
     explorerMain: http://explorer.btcd.io
     explorerTx: http://explorer.btcd.io/#/tx?tx=
     faucet:
   testnet:
-    port: 18333
+    port: 7116
     explorerMain:
     explorerTx:
     faucet:

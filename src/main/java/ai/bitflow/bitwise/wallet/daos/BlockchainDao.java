@@ -1,5 +1,6 @@
 package ai.bitflow.bitwise.wallet.daos;
 
+import ai.bitflow.bitwise.wallet.constants.abstracts.BlockchainConstant;
 import ai.bitflow.bitwise.wallet.domains.TbBlockchainMaster;
 import ai.bitflow.bitwise.wallet.domains.TbTrans;
 import ai.bitflow.bitwise.wallet.domains.primarykeys.PkSymbolTestnet;
@@ -30,44 +31,77 @@ import java.util.Set;
  */
 @Slf4j
 @Repository
-public abstract class BlockchainDao {
+public abstract class BlockchainDao implements BlockchainConstant {
 
-    @Getter @Value("${app.setting.symbol}")
-    private String symbol;
-    @Getter @Value("${app.setting.testnet}")
-    private boolean testnet;
+	@Getter @Value("${app.setting.symbol}") private String symbol;
+    @Value("${app.setting.rpcUrl}") private String rpcUrl;
+    @Getter @Value("${app.setting.testnet}") private boolean testnet;
+    @Getter @Value("${app.setting.rpcId}") private String rpcId;
+    @Getter @Value("${app.setting.rpcPw}") private String rpcPw;
+    @Getter @Value("${app.setting.decimals}") private int decimals;
+    @Getter @Value("${app.setting.minConfirm}") private long minConfirm;
+
+    @Getter @Value("${app.setting.ownerAddress}") private String ownerAddress;
+
+    @Getter @Value("${app.setting.minGasAmt}") private double minGasAmt;      // not using
+    @Getter @Value("${app.setting.minAmtGather}") private double minAmtGather; // not using
+    @Getter @Value("${app.setting.blockStartFrom}") private long blockStartFrom;
+
+    @Getter @Value("${app.setting.ownerAccount}") private String ownerAccount;
+    @Getter @Value("${app.setting.userAccount}") private String userAccount;
+
     @Autowired
     private BlockchainMasterRepository blockchainMaster;
     @Autowired
     private TransactionRepository transaction;
-    abstract long getBestBlockCount(BitcoinService ctx) throws Exception;
-    abstract List<String> getAllAddressListFromNode(BitcoinService ctx, String uid);
+    
+    abstract long getBestBlockCount() throws Exception;
+    abstract List<String> getAllAddressListFromNode(String uid);
     abstract Set<String> getAllAddressSetFromNode();
 
+    public String getRpcUrl() {
+    	if (multiWalletSupport()) {
+    		return rpcUrl + "wallet/";
+    	} else {
+    		return rpcUrl;
+    	}
+    }
+    
+    public boolean multiWalletSupport() {
+    	if (symbol.toUpperCase().equals(SYMBOL_BTC) || symbol.toUpperCase().equals(SYMBOL_LTC)) {
+    		return true;
+    	} else {
+    		return false;
+    	}
+    }
+    
+    public void setRpcError() {
+    	TbBlockchainMaster item = getBlockchainMaster();
+        item.setRpcOk('N');
+        blockchainMaster.save(item);
+    }
     /**
      * DB에서 마스터 테이블 조회하는 경우
      * @return
      */
-    public TbBlockchainMaster getBlockchainMaster(BlockchainCommonService ctx) {
+    public TbBlockchainMaster getBlockchainMaster() {
         PkSymbolTestnet pk = new PkSymbolTestnet(getSymbol(), isTestnet()?'Y':'N');
         Optional<TbBlockchainMaster> obj = blockchainMaster.findById(pk);
         TbBlockchainMaster master = null;
         if (obj.isPresent()) {
             // 기존 데이터가 있으면
-            log.debug("Master exists");
             master = obj.get();
         } else {
-            log.debug("Master doest not exist");
             if (this instanceof OwnChain) {
                 // 1) Case of Coin
-                master = new TbBlockchainMaster(ctx.getSymbol(),
-                        ctx.isTestnet(),
-                        ctx.getOwnerAddress(),
+                master = new TbBlockchainMaster(getSymbol(),
+                        isTestnet(),
+                        getOwnerAddress(),
                         ((OwnChain)this).getBlockStartFrom(),
                         ((OwnChain)this).getBlockStartFrom());
             } else {
                 // 2) Case of Token
-                master = new TbBlockchainMaster(ctx.getSymbol(), ctx.isTestnet(), ctx.getOwnerAddress());
+                master = new TbBlockchainMaster(getSymbol(), isTestnet(), getOwnerAddress());
             }
             blockchainMaster.save(master);
         }

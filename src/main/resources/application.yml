@@ -36,7 +36,7 @@ app:
   setting:
     symbol: btc
     testnet: true
-    rpcUrl: http://bitflow.ai:50000/wallet/
+    rpcUrl: http://bitflow.ai:50000/
     rpcId: btc-user
     rpcPw: btc-passwd
     decimals: 8
@@ -47,8 +47,8 @@ app:
     coldAddress:
     minAmtGather: 0.1
     minGasAmt: 0
-    userAccount: btc-users
-    ownerAccount: btc-owner
+    userAccount: api-users
+    ownerAccount: api-owner
     ownerAddress: 3P6yoEDNrcZcUs3uMM3RW7qCGFtz8SZbk6
   useKafka: false
   useFcm: false

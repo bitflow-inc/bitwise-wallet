@@ -24,6 +24,8 @@ public class TbTrans implements Serializable {
 	@Column(columnDefinition="TIMESTAMP DEFAULT CURRENT_TIMESTAMP", insertable=false, updatable=false)
 	private Date regDt;
 	@Id
+    private String symbol;
+	@Id
     private String txid;
 	@Id
 	private String category;

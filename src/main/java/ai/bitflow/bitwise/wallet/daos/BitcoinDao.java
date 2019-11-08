@@ -1,30 +1,47 @@
 package ai.bitflow.bitwise.wallet.daos;
 
-import ai.bitflow.bitwise.wallet.utils.Logger;
-import ai.bitflow.bitwise.wallet.constants.Bitcoin0170Constant;
-import ai.bitflow.bitwise.wallet.constants.abstracts.BlockchainConstant;
-import ai.bitflow.bitwise.wallet.domains.TbError;
-import ai.bitflow.bitwise.wallet.domains.TbTrans;
-import ai.bitflow.bitwise.wallet.gsonObjects.apiParameters.SendToAddressRequest;
-import ai.bitflow.bitwise.wallet.gsonObjects.bitcoin.*;
-import ai.bitflow.bitwise.wallet.gsonObjects.common.*;
-import ai.bitflow.bitwise.wallet.repositories.ErrorRepository;
-import ai.bitflow.bitwise.wallet.repositories.TransactionRepository;
-import ai.bitflow.bitwise.wallet.services.abstracts.BitcoinService;
-import ai.bitflow.bitwise.wallet.services.interfaces.LockableWallet;
-import ai.bitflow.bitwise.wallet.utils.JsonRpcUtil;
-import com.google.gson.Gson;
-import com.google.gson.internal.LinkedTreeMap;
-import lombok.Getter;
+import java.io.IOException;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.persistence.EntityManagerFactory;
+
 import org.apache.http.client.ClientProtocolException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
-import javax.persistence.EntityManagerFactory;
-import java.io.IOException;
-import java.text.DecimalFormat;
-import java.util.*;
+import com.google.gson.Gson;
+import com.google.gson.internal.LinkedTreeMap;
+
+import ai.bitflow.bitwise.wallet.constants.Bitcoin0170Constant;
+import ai.bitflow.bitwise.wallet.constants.abstracts.BlockchainConstant;
+import ai.bitflow.bitwise.wallet.domains.TbError;
+import ai.bitflow.bitwise.wallet.domains.TbTrans;
+import ai.bitflow.bitwise.wallet.gsonObjects.apiParameters.SendToAddressRequest;
+import ai.bitflow.bitwise.wallet.gsonObjects.bitcoin.CreateWallet;
+import ai.bitflow.bitwise.wallet.gsonObjects.bitcoin.EstimateSmartFee;
+import ai.bitflow.bitwise.wallet.gsonObjects.bitcoin.GetBlock;
+import ai.bitflow.bitwise.wallet.gsonObjects.bitcoin.GetWalletInfo;
+import ai.bitflow.bitwise.wallet.gsonObjects.bitcoin.ListAddressGroupings;
+import ai.bitflow.bitwise.wallet.gsonObjects.bitcoin.ListSinceBlock;
+import ai.bitflow.bitwise.wallet.gsonObjects.common.BitcoinBooleanResponse;
+import ai.bitflow.bitwise.wallet.gsonObjects.common.BitcoinLongResponse;
+import ai.bitflow.bitwise.wallet.gsonObjects.common.BitcoinObjectResponse;
+import ai.bitflow.bitwise.wallet.gsonObjects.common.BitcoinStringArrayResponse;
+import ai.bitflow.bitwise.wallet.gsonObjects.common.BitcoinStringResponse;
+import ai.bitflow.bitwise.wallet.repositories.ErrorRepository;
+import ai.bitflow.bitwise.wallet.repositories.TransactionRepository;
+import ai.bitflow.bitwise.wallet.services.abstracts.BitcoinService;
+import ai.bitflow.bitwise.wallet.services.interfaces.LockableWallet;
+import ai.bitflow.bitwise.wallet.services.interfaces.OwnChain;
+import ai.bitflow.bitwise.wallet.utils.JsonRpcUtil;
+import ai.bitflow.bitwise.wallet.utils.Logger;
+import lombok.Getter;
 
 
 /**
@@ -33,7 +50,7 @@ import java.util.*;
  */
 @Repository
 public class BitcoinDao extends BlockchainDao implements Bitcoin0170Constant,
-        BlockchainConstant, LockableWallet {
+			OwnChain, BlockchainConstant, LockableWallet {
 
     @Getter
     @Value("${app.setting.pp}") private String passphrase;
@@ -53,11 +70,11 @@ public class BitcoinDao extends BlockchainDao implements Bitcoin0170Constant,
      * @return
      * @throws Exception
      */
-    public long getBestBlockCount(BitcoinService ctx) throws Exception {
+    public long getBestBlockCount() throws Exception {
         BitcoinLongResponse res = gson.fromJson(
-                JsonRpcUtil.sendJsonRpcBasicAuth(ctx.getRpcUrl(),
-                        METHOD_GETBLOCKCOUNT, null, ctx.getRpcId(),
-                        ctx.getRpcPw()), BitcoinLongResponse.class);
+                JsonRpcUtil.sendJsonRpcBasicAuth(getRpcUrl(),
+                        METHOD_GETBLOCKCOUNT, null, getRpcId(),
+                        getRpcPw()), BitcoinLongResponse.class);
         if (res.getError()==null) {
             return res.getResult();
         } else {
@@ -70,9 +87,9 @@ public class BitcoinDao extends BlockchainDao implements Bitcoin0170Constant,
         String[] params = new String[1];
         params[0] = "6";
         EstimateSmartFee res = gson.fromJson(
-                JsonRpcUtil.sendJsonRpcBasicAuth(ctx.getRpcUrl(),
-                        METHOD_ESTIMATESMARTFEE, params, ctx.getRpcId(),
-                        ctx.getRpcPw()), EstimateSmartFee.class);
+                JsonRpcUtil.sendJsonRpcBasicAuth(getRpcUrl(),
+                        METHOD_ESTIMATESMARTFEE, params, getRpcId(),
+                        getRpcPw()), EstimateSmartFee.class);
         if (res.getError()!=null) {
             throw new Exception(METHOD_ESTIMATESMARTFEE
                     + ": " + res.getError());
@@ -90,8 +107,8 @@ public class BitcoinDao extends BlockchainDao implements Bitcoin0170Constant,
         // Iterate over send request count
         Iterator keys = to.keySet().iterator();
         StringBuilder param1 = new StringBuilder("{");
-        List<String> toAddrs = new ArrayList<>();
-        List<Double> toAmounts = new ArrayList<>();
+        List<String> toAddrs = new ArrayList<String>();
+        List<Double> toAmounts = new ArrayList<Double>();
         while(keys.hasNext()) {
             String key = (String) keys.next();
             param1.append("\"");
@@ -108,8 +125,8 @@ public class BitcoinDao extends BlockchainDao implements Bitcoin0170Constant,
         params[1] = param1.toString();
         // 전송 요청
         String resStr = JsonRpcUtil.sendJsonRpcBasicAuth(
-                ctx.getRpcUrl() + uid, METHOD_SENDMANY, params,
-                ctx.getRpcId(), ctx.getRpcPw());
+                getRpcUrl() + uid, METHOD_SENDMANY, params,
+                getRpcId(), getRpcPw());
         BitcoinStringResponse res = gson.fromJson(resStr, BitcoinStringResponse.class);
         if (res.getError()==null) {
             // ON SUCCESS
@@ -136,9 +153,9 @@ public class BitcoinDao extends BlockchainDao implements Bitcoin0170Constant,
         params[0] = "" + startHeight;
         // 시작블럭 해시 가져오기
         BitcoinStringResponse res = gson.fromJson(
-                JsonRpcUtil.sendJsonRpcBasicAuth(ctx.getRpcUrl(),
-                        METHOD_GETBLOCKHASH, params, ctx.getRpcId(),
-                        ctx.getRpcPw()), BitcoinStringResponse.class);
+                JsonRpcUtil.sendJsonRpcBasicAuth(getRpcUrl(),
+                        METHOD_GETBLOCKHASH, params, getRpcId(),
+                        getRpcPw()), BitcoinStringResponse.class);
         if (res==null) {
             log.error(METHOD_GETBLOCKHASH, "null");
             throw new Exception(METHOD_GETBLOCKHASH + ": Null");
@@ -149,15 +166,15 @@ public class BitcoinDao extends BlockchainDao implements Bitcoin0170Constant,
         }
     }
 
-    public LinkedTreeMap getAddressesByLabel(BitcoinService ctx, String walletId)
+    public LinkedTreeMap getAddressesByLabel(String walletId)
             throws Exception {
         String[] params = new String[1];
         params[0] = "\"\"";
         // 시작블럭 해시 가져오기
         BitcoinObjectResponse res = gson.fromJson(
-                JsonRpcUtil.sendJsonRpcBasicAuth(ctx.getRpcUrl() + walletId,
-                        METHOD_GETADDRBYLABEL, params, ctx.getRpcId(),
-                        ctx.getRpcPw()), BitcoinObjectResponse.class);
+                JsonRpcUtil.sendJsonRpcBasicAuth(getRpcUrl() + walletId,
+                        METHOD_GETADDRBYLABEL, params, getRpcId(),
+                        getRpcPw()), BitcoinObjectResponse.class);
         if (res==null) {
             log.error(METHOD_GETADDRBYLABEL, "null");
             throw new Exception(METHOD_GETADDRBYLABEL + ": Null");
@@ -174,11 +191,11 @@ public class BitcoinDao extends BlockchainDao implements Bitcoin0170Constant,
      * @throws Exception
      */
     @Override
-    public List<String> getAllAddressListFromNode(BitcoinService ctx, String uid) {
+    public List<String> getAllAddressListFromNode(String uid) {
 
-        List<String> ret = new ArrayList<>();
+        List<String> ret = new ArrayList<String>();
         try {
-            LinkedTreeMap addressMap = getAddressesByLabel(ctx, uid);
+            LinkedTreeMap addressMap = getAddressesByLabel(uid);
             Iterator<String> it = addressMap.keySet().iterator();
             while(it.hasNext()) {
                 ret.add(it.next());
@@ -205,8 +222,8 @@ public class BitcoinDao extends BlockchainDao implements Bitcoin0170Constant,
         params2[0] = "\"" + blockhash + "\"";
         try {
             GetBlock res = gson.fromJson(
-                    JsonRpcUtil.sendJsonRpcBasicAuth(ctx.getRpcUrl(), METHOD_GETBLOCK,
-                            params2, ctx.getRpcId(), ctx.getRpcPw()), GetBlock.class);
+                    JsonRpcUtil.sendJsonRpcBasicAuth(getRpcUrl(), METHOD_GETBLOCK,
+                            params2, getRpcId(), getRpcPw()), GetBlock.class);
             if (res.getError()!=null) {
                 log.error(METHOD_GETBLOCK, res.getError());
                 return null;
@@ -221,8 +238,8 @@ public class BitcoinDao extends BlockchainDao implements Bitcoin0170Constant,
 
     public String[] listwallets (BitcoinService ctx)
             throws IOException {
-        String resStr = JsonRpcUtil.sendJsonRpcBasicAuth(ctx.getRpcUrl(),
-                METHOD_LISTWALLETS, null, ctx.getRpcId(), ctx.getRpcPw());
+        String resStr = JsonRpcUtil.sendJsonRpcBasicAuth(getRpcUrl(),
+                METHOD_LISTWALLETS, null, getRpcId(), getRpcPw());
         return gson.fromJson(resStr, BitcoinStringArrayResponse.class).getResult();
     }
 
@@ -231,9 +248,9 @@ public class BitcoinDao extends BlockchainDao implements Bitcoin0170Constant,
         String[] params = new String[1];
         params[0] = "\"" + startBlockHash + "\"";
         // 내 트랜잭션만 반환
-        String resStr = JsonRpcUtil.sendJsonRpcBasicAuth(ctx.getRpcUrl()
+        String resStr = JsonRpcUtil.sendJsonRpcBasicAuth(getRpcUrl()
                 + walletId, METHOD_LISTSINCEBLOCK, params,
-                ctx.getRpcId(), ctx.getRpcPw());
+                getRpcId(), getRpcPw());
         return gson.fromJson(resStr, ListSinceBlock.class);
     }
 
@@ -243,14 +260,14 @@ public class BitcoinDao extends BlockchainDao implements Bitcoin0170Constant,
         String[] params1 = new String[2];
         params1[0] = "\"00000000\""; // Dummy PW to check
         params1[1] = "1";
-        String resStr1 = JsonRpcUtil.sendJsonRpcBasicAuth(ctx.getRpcUrl()
+        String resStr1 = JsonRpcUtil.sendJsonRpcBasicAuth(getRpcUrl()
                         + uid, METHOD_GETWALLETINFO, null,
-                ctx.getRpcId(), ctx.getRpcPw());
+                getRpcId(), getRpcPw());
         GetWalletInfo ret1 = gson.fromJson(resStr1, GetWalletInfo.class);
 
-        String resStr2 = JsonRpcUtil.sendJsonRpcBasicAuth(ctx.getRpcUrl()
+        String resStr2 = JsonRpcUtil.sendJsonRpcBasicAuth(getRpcUrl()
                         + uid, METHOD_WALLETPP, params1,
-                ctx.getRpcId(), ctx.getRpcPw());
+                getRpcId(), getRpcPw());
         BitcoinStringResponse ret2 = gson.fromJson(resStr2, BitcoinStringResponse.class);
         if (ret2.getError()!=null && ret2.getError().getCode()==ERR_CD_WALLET_UNENC) {
             ret1.getResult().setWalletlock(false);
@@ -262,9 +279,9 @@ public class BitcoinDao extends BlockchainDao implements Bitcoin0170Constant,
 
     public ListAddressGroupings listAddressGroupings(BitcoinService ctx,
                                                      String uid) throws IOException {
-        String resStr = JsonRpcUtil.sendJsonRpcBasicAuth(ctx.getRpcUrl()
+        String resStr = JsonRpcUtil.sendJsonRpcBasicAuth(getRpcUrl()
                         + uid, METHOD_LISTADDRESSGROUPINGS, null,
-                ctx.getRpcId(), ctx.getRpcPw());
+                getRpcId(), getRpcPw());
         return gson.fromJson(resStr, ListAddressGroupings.class);
     }
 
@@ -281,8 +298,8 @@ public class BitcoinDao extends BlockchainDao implements Bitcoin0170Constant,
         DecimalFormat df = new DecimalFormat("#.########");
         params[0] = df.format(param.getCustomFee());
         String resStr = JsonRpcUtil.sendJsonRpcBasicAuth(
-                ctx.getRpcUrl() + param.getUid(), METHOD_SETTXFEE,
-                params, ctx.getRpcId(), ctx.getRpcPw());
+                getRpcUrl() + param.getUid(), METHOD_SETTXFEE,
+                params, getRpcId(), getRpcPw());
         BitcoinBooleanResponse res = gson.fromJson
                 (resStr, BitcoinBooleanResponse.class);
         if (res.getError()==null) {
@@ -305,8 +322,8 @@ public class BitcoinDao extends BlockchainDao implements Bitcoin0170Constant,
         params[1] = df.format(param.getAmount());
         // 노드에 전송 요청
         String resStr = JsonRpcUtil.sendJsonRpcBasicAuth(
-                ctx.getRpcUrl() + param.getUid(), METHOD_SENDTOADDRESS,
-                params, ctx.getRpcId(), ctx.getRpcPw());
+                getRpcUrl() + param.getUid(), METHOD_SENDTOADDRESS,
+                params, getRpcId(), getRpcPw());
         BitcoinStringResponse res = gson.fromJson
                 (resStr, BitcoinStringResponse.class);
         if (res.getError()==null) {
@@ -330,9 +347,9 @@ public class BitcoinDao extends BlockchainDao implements Bitcoin0170Constant,
         params[0] = "\"" + uid + "\"";
         // result: { name , warning }
         try {
-            String resStr = JsonRpcUtil.sendJsonRpcBasicAuth(ctx.getRpcUrl(),
+            String resStr = JsonRpcUtil.sendJsonRpcBasicAuth(getRpcUrl(),
                     Bitcoin0170Constant.METHOD_CREATEWALLET, params,
-                    ctx.getRpcId(), ctx.getRpcPw());
+                    getRpcId(), getRpcPw());
             log.info(METHOD_CREATEWALLET, "res " + resStr);
             CreateWallet res = gson.fromJson(resStr, CreateWallet.class);
             if (res.getError()!=null) {
@@ -360,9 +377,9 @@ public class BitcoinDao extends BlockchainDao implements Bitcoin0170Constant,
         params[0] = "true";
         params[1] = "\"" + wifkey + "\"";
         BitcoinStringResponse res = gson.fromJson(
-                JsonRpcUtil.sendJsonRpcBasicAuth(ctx.getRpcUrl() + uid,
-                        METHOD_SETHDSEED, params, ctx.getRpcId(),
-                        ctx.getRpcPw()), BitcoinStringResponse.class);
+                JsonRpcUtil.sendJsonRpcBasicAuth(getRpcUrl() + uid,
+                        METHOD_SETHDSEED, params, getRpcId(),
+                        getRpcPw()), BitcoinStringResponse.class);
         if (res.getError()==null) {
             log.info(METHOD_SETHDSEED, "" + res.getResult());
             return;
@@ -404,10 +421,10 @@ public class BitcoinDao extends BlockchainDao implements Bitcoin0170Constant,
         params[0] = "\"" + pp + "\"";
         params[1] = interval;
         try {
-            String resStr = JsonRpcUtil.sendJsonRpcBasicAuth(ctx.getRpcUrl(),
-                    METHOD_WALLETPP, params, ctx.getRpcId(), ctx.getRpcPw());
-            log.debug(METHOD_WALLETPP, ctx.getRpcId() + " "
-                    + ctx.getRpcPw() + " " + resStr);
+            String resStr = JsonRpcUtil.sendJsonRpcBasicAuth(getRpcUrl(),
+                    METHOD_WALLETPP, params, getRpcId(), getRpcPw());
+            log.debug(METHOD_WALLETPP, getRpcId() + " "
+                    + getRpcPw() + " " + resStr);
             res = gson.fromJson(resStr, BitcoinStringResponse.class);
             if (res.getError()!=null) {
                 log.error(METHOD_WALLETPP, res.getError());
@@ -435,10 +452,10 @@ public class BitcoinDao extends BlockchainDao implements Bitcoin0170Constant,
         params[0] = "\"" + getPassphrase() + "\"";
         params[1] = interval;
         try {
-            String resStr = JsonRpcUtil.sendJsonRpcBasicAuth(ctx.getRpcUrl(),
-                    METHOD_WALLETPP, params, ctx.getRpcId(), ctx.getRpcPw());
-            log.debug(METHOD_WALLETPP, ctx.getRpcId() + " "
-                    + ctx.getRpcPw() + " " + resStr);
+            String resStr = JsonRpcUtil.sendJsonRpcBasicAuth(getRpcUrl(),
+                    METHOD_WALLETPP, params, getRpcId(), getRpcPw());
+            log.debug(METHOD_WALLETPP, getRpcId() + " "
+                    + getRpcPw() + " " + resStr);
             res = gson.fromJson(resStr, BitcoinStringResponse.class);
             if (res.getError()!=null) {
                 log.error(METHOD_WALLETPP, res.getError());
@@ -464,9 +481,9 @@ public class BitcoinDao extends BlockchainDao implements Bitcoin0170Constant,
         // 1) WalletLock => params: null => result: null
         BitcoinObjectResponse res = null;
         try {
-            String resStr = JsonRpcUtil.sendJsonRpcBasicAuth(ctx.getRpcUrl() + uid,
+            String resStr = JsonRpcUtil.sendJsonRpcBasicAuth(getRpcUrl() + uid,
                     METHOD_WALLETLOCK, null,
-                    ctx.getRpcId(), ctx.getRpcPw());
+                    getRpcId(), getRpcPw());
             res = gson.fromJson(resStr, BitcoinObjectResponse.class);
             if (res.getError()!=null) {
                 log.error(METHOD_WALLETLOCK, res.getError());
@@ -494,8 +511,8 @@ public class BitcoinDao extends BlockchainDao implements Bitcoin0170Constant,
 //            params[0] = "\"" + passphrase + "\"";
 //            BitcoinObjectResponse res = null;
 //            try {
-//                String resStr = JsonRpcUtil.sendJsonRpcBasicAuth(ctx.getRpcUrl(),
-//                        METHOD_ENCRYPTWALLET, params, ctx.getRpcId(), ctx.getRpcPw());
+//                String resStr = JsonRpcUtil.sendJsonRpcBasicAuth(getRpcUrl(),
+//                        METHOD_ENCRYPTWALLET, params, getRpcId(), getRpcPw());
 //                res = gson.fromJson(resStr, BitcoinObjectResponse.class);
 //                if (res.getError() != null) {
 //                    log.error(METHOD_ENCRYPTWALLET, res.getError());
@@ -514,24 +531,27 @@ public class BitcoinDao extends BlockchainDao implements Bitcoin0170Constant,
      * @throws ClientProtocolException
      * @throws IOException
      */
-    public void encryptwallet(BitcoinService ctx, String uid, String lpassphrase) {
+    public void encryptwallet(final BitcoinService ctx, final String uid, final String lpassphrase) {
         // 1) WalletLock => params: null => result: null
-        new Thread(() -> {
-            String[] params = new String[1];
-            params[0] = "\"" + lpassphrase + "\"";
-            BitcoinObjectResponse res = null;
-            try {
-                String resStr = JsonRpcUtil.sendJsonRpcBasicAuth(ctx.getRpcUrl()
-                                + uid,
-                        METHOD_ENCRYPTWALLET, params, ctx.getRpcId(), ctx.getRpcPw());
-                res = gson.fromJson(resStr, BitcoinObjectResponse.class);
-                if (res.getError() != null) {
-                    log.error(METHOD_ENCRYPTWALLET, res.getError());
-                } else {
-                    log.success(METHOD_ENCRYPTWALLET, "success");
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                String[] params = new String[1];
+                params[0] = "\"" + lpassphrase + "\"";
+                BitcoinObjectResponse res = null;
+                try {
+                    String resStr = JsonRpcUtil.sendJsonRpcBasicAuth(getRpcUrl()
+                                    + uid,
+                            METHOD_ENCRYPTWALLET, params, getRpcId(), getRpcPw());
+                    res = gson.fromJson(resStr, BitcoinObjectResponse.class);
+                    if (res.getError() != null) {
+                        log.error(METHOD_ENCRYPTWALLET, res.getError());
+                    } else {
+                        log.success(METHOD_ENCRYPTWALLET, "success");
+                    }
+                } catch (Exception e) {
+                    log.error(METHOD_ENCRYPTWALLET, e);
                 }
-            } catch (Exception e) {
-                log.error(METHOD_ENCRYPTWALLET, e);
             }
         }).start();
     }

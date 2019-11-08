@@ -1,5 +1,31 @@
 package ai.bitflow.bitwise.wallet.services.abstracts;
 
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityTransaction;
+
+import org.apache.http.client.ClientProtocolException;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.web3j.crypto.WalletUtils;
+import org.web3j.protocol.Web3j;
+import org.web3j.protocol.http.HttpService;
+import org.web3j.utils.Convert;
+import org.web3j.utils.Convert.Unit;
+import org.web3j.utils.Numeric;
+
 import ai.bitflow.bitwise.wallet.constants.EthereumConstant;
 import ai.bitflow.bitwise.wallet.domains.TbBlockchainMaster;
 import ai.bitflow.bitwise.wallet.domains.TbTrans;
@@ -20,35 +46,15 @@ import ai.bitflow.bitwise.wallet.services.interfaces.LockableAddress;
 import ai.bitflow.bitwise.wallet.services.interfaces.OwnChain;
 import ai.bitflow.bitwise.wallet.utils.ConvertUtil;
 import ai.bitflow.bitwise.wallet.utils.JsonRpcUtil;
-import com.google.gson.JsonSyntaxException;
-import org.apache.http.client.ClientProtocolException;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Transactional;
-import org.web3j.crypto.WalletUtils;
-import org.web3j.protocol.Web3j;
-import org.web3j.protocol.http.HttpService;
-import org.web3j.utils.Convert;
-import org.web3j.utils.Convert.Unit;
-import org.web3j.utils.Numeric;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.EntityTransaction;
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.util.*;
-
-
+@Service
 public abstract class EthereumService extends BlockchainCommonService implements
         EthereumConstant, OwnChain, LockableAddress {
   
     private BigInteger gasPrice;
     private Web3j web3j;
     public Web3j getWeb3j() {
-        if (web3j==null) { web3j = Web3j.build(new HttpService(getRpcUrl())); }
+        if (web3j==null) { web3j = Web3j.build(new HttpService(blockchainDao.getRpcUrl())); }
         return web3j;
     }
     @Autowired
@@ -95,17 +101,17 @@ public abstract class EthereumService extends BlockchainCommonService implements
     }
 
     private String[] getAllAddressArray() {
-        String method = SYMBOL_ETC.equals(getSymbol())?METHOD_ACCOUNTS:METHOD_LISTACCOUNTS;
+        String method = SYMBOL_ETC.equals(blockchainDao.getSymbol())?METHOD_ACCOUNTS:METHOD_LISTACCOUNTS;
         EthListAccount res = null;
         try {
-            String resStr = JsonRpcUtil.sendJsonRpc2(getRpcUrl(), method, null); //
+            String resStr = JsonRpcUtil.sendJsonRpc2(blockchainDao.getRpcUrl(), method, null);
             res = gson.fromJson(resStr, EthListAccount.class);
             if (res.getError()!=null) {
                 return null;
             } else {
                 return res.getResult();
             }
-        } catch (IOException | IllegalStateException | JsonSyntaxException e) {
+        } catch (Exception e) {
               log.error(METHOD_LISTACCOUNTS, e);
               return null;
         }
@@ -121,7 +127,7 @@ public abstract class EthereumService extends BlockchainCommonService implements
         // gets all addresses from ETH node
         String[] userarr = getAllAddressArray();
         if (userarr==null) { return null; }
-        Set<String> users = new HashSet<>();
+        Set<String> users = new HashSet<String>();
         for (String user : userarr) {
             users.add(user);
         }
@@ -145,7 +151,7 @@ public abstract class EthereumService extends BlockchainCommonService implements
     
     @Override public boolean isOwnerAddressExists() {
     	List<String> alladdrs = getAllAddressListFromNode();
-    	if (alladdrs!=null && alladdrs.contains(getOwnerAddress())) {
+    	if (alladdrs!=null && alladdrs.contains(blockchainDao.getOwnerAddress())) {
     		return true;
     	} else {
     		return false;
@@ -185,7 +191,7 @@ public abstract class EthereumService extends BlockchainCommonService implements
         BitcoinStringResponse res = null;
         JSONObject params = new JSONObject();
         
-        String from = (datum.getFromAddr()==null||"".equals(datum.getFromAddr()))? getOwnerAddress()
+        String from = (datum.getFromAddr()==null||"".equals(datum.getFromAddr()))? blockchainDao.getOwnerAddress()
         		:datum.getFromAddr();
         double amountEth = datum.getAmount();
         params.put("from",     from);
@@ -198,7 +204,7 @@ public abstract class EthereumService extends BlockchainCommonService implements
         paramArr.put(params);
         // 노드에 전송 요청
         try {
-            String resStr = JsonRpcUtil.sendJsonRpcJson(getRpcUrl(),
+            String resStr = JsonRpcUtil.sendJsonRpcJson(blockchainDao.getRpcUrl(),
                     METHOD_SENDFROMADDR, paramArr);
             res = gson.fromJson(resStr, BitcoinStringResponse.class);
             if (res.getError()!=null) {
@@ -223,14 +229,14 @@ public abstract class EthereumService extends BlockchainCommonService implements
      */
     @Transactional
     @Override public boolean updateTxConfirmCount() {
-        return updateSendConfirm(getSymbol());
+        return updateSendConfirm(blockchainDao.getSymbol());
     }
     
     public boolean updateSendConfirm(String symbol) {
         
         // 1) 출금 진행중인 건 조회: TXID가 있고 거래소에 알리지 않은 건
         boolean success = true;
-        TbBlockchainMaster master = blockchainDao.getBlockchainMaster(this);
+        TbBlockchainMaster master = blockchainDao.getBlockchainMaster();
         long lastestHeight = master.getBestHeight();
         List<TbTrans> data = getSendTXToUpdate(symbol);
         
@@ -305,7 +311,7 @@ public abstract class EthereumService extends BlockchainCommonService implements
         String[] params = new String[1];
         params[0] = "\"" + txid + "\"";
         try {
-            String resStr = JsonRpcUtil.sendJsonRpc2(getRpcUrl(), METHOD_TXRECEIPT,
+            String resStr = JsonRpcUtil.sendJsonRpc2(blockchainDao.getRpcUrl(), METHOD_TXRECEIPT,
                     params);
             return gson.fromJson(resStr, EthTxReceipt.class);
         } catch (Exception e) {
@@ -316,7 +322,7 @@ public abstract class EthereumService extends BlockchainCommonService implements
     public long getBestBlockCount() {
         BitcoinStringResponse res = null;
         try {
-            String resStr = JsonRpcUtil.sendJsonRpc2(getRpcUrl(),
+            String resStr = JsonRpcUtil.sendJsonRpc2(blockchainDao.getRpcUrl(),
             		METHOD_GETBLOCKCOUNT, null);
             res = gson.fromJson(resStr, BitcoinStringResponse.class);
             if (res.getError()!=null) {
@@ -339,7 +345,7 @@ public abstract class EthereumService extends BlockchainCommonService implements
         params[0] = "\"" + hash + "\"";
         params[1] = "true";
         try {
-            String resStr = JsonRpcUtil.sendJsonRpc2(getRpcUrl(), METHOD_BLOCKBYHASH, params);
+            String resStr = JsonRpcUtil.sendJsonRpc2(blockchainDao.getRpcUrl(), METHOD_BLOCKBYHASH, params);
             res = gson.fromJson(resStr, EthBlock.class);
             if (res.getError()!=null) {
                 log.error(METHOD_BLOCKBYHASH, res.getError());
@@ -359,7 +365,7 @@ public abstract class EthereumService extends BlockchainCommonService implements
         gasPrice = getGasPrice();
         if (gasPrice.compareTo(BigInteger.ZERO)==1) {
         	// 0보다 크면
-            TbBlockchainMaster master = blockchainDao.getBlockchainMaster(this);
+            TbBlockchainMaster master = blockchainDao.getBlockchainMaster();
             master.setLastGasPrice(Convert.fromWei(new BigDecimal(gasPrice),
             		Unit.GWEI).doubleValue());
 //            blockchainMaster.save(master);
@@ -379,7 +385,7 @@ public abstract class EthereumService extends BlockchainCommonService implements
      */
     public synchronized BigInteger getGasPrice() {
         try {
-            String resStr = JsonRpcUtil.sendJsonRpc2(getRpcUrl(), METHOD_GAS_PRICE,
+            String resStr = JsonRpcUtil.sendJsonRpc2(blockchainDao.getRpcUrl(), METHOD_GAS_PRICE,
                     null);
             BitcoinStringResponse res = gson.fromJson(resStr, BitcoinStringResponse.class);
             if (res.getResult()!=null) {
@@ -404,7 +410,7 @@ public abstract class EthereumService extends BlockchainCommonService implements
 //        params[2] = "\"" + Numeric.toHexStringWithPrefix(new BigInteger(WALLET_UNLOCK_SHORT)) + "\"";
         
         try {
-            String resStr = JsonRpcUtil.sendJsonRpc2(getRpcUrl(), METHOD_WALLETPP,
+            String resStr = JsonRpcUtil.sendJsonRpc2(blockchainDao.getRpcUrl(), METHOD_WALLETPP,
                     params);
             res = gson.fromJson(resStr, BitcoinBooleanResponse.class);
             if (res.getError()!=null) {
@@ -437,7 +443,7 @@ public abstract class EthereumService extends BlockchainCommonService implements
         String[] params = new String[1];
         params[0] = "\"" + address + "\"";
         try {      
-            String resStr = JsonRpcUtil.sendJsonRpc2(getRpcUrl(), METHOD_WALLETLOCK,
+            String resStr = JsonRpcUtil.sendJsonRpc2(blockchainDao.getRpcUrl(), METHOD_WALLETLOCK,
                     params);
             res = gson.fromJson(resStr, BitcoinObjectResponse.class);
             if (res.getError()==null) {
@@ -459,7 +465,7 @@ public abstract class EthereumService extends BlockchainCommonService implements
      */
     public boolean openBlocksGetTxsThenSaveSingle() {
         
-        TbBlockchainMaster master = blockchainDao.getBlockchainMaster(this);
+        TbBlockchainMaster master = blockchainDao.getBlockchainMaster();
         long currentHeight = master.getSyncHeight();
         long lastestHeight = master.getBestHeight();
         
@@ -468,7 +474,7 @@ public abstract class EthereumService extends BlockchainCommonService implements
             // 동기화 할 블럭이 있으면          
             int blockcount = 0; 
             log.info("SYNC", currentHeight + "=>" + lastestHeight);
-            String masteraddr    = getOwnerAddress();
+            String masteraddr    = blockchainDao.getOwnerAddress();
             Set<String> alladdrs = getAllAddressSetFromNode();
 
             EntityManager em = emf.createEntityManager();
@@ -485,7 +491,7 @@ public abstract class EthereumService extends BlockchainCommonService implements
                     params2[1] = "true";
                     EthBlock res2 = null;
                     try {
-                        String resStr = JsonRpcUtil.sendJsonRpc2(getRpcUrl(),
+                        String resStr = JsonRpcUtil.sendJsonRpc2(blockchainDao.getRpcUrl(),
                         		METHOD_BLOCKBYNUMBER, params2);
                         // 블럭해시 가져오기
                         res2 = gson.fromJson(resStr, EthBlock.class);

@@ -10,7 +10,7 @@ import java.util.List;
 public class TbTransListToTransList {
 
     public static List<Transaction> convert(List<TbTrans> items) {
-        List<Transaction> ret = new ArrayList<>();
+        List<Transaction> ret = new ArrayList<Transaction>();
         for (TbTrans item : items) {
             ret.add(new Transaction(item));
         }

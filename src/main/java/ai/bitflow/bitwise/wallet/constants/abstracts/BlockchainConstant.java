@@ -25,6 +25,7 @@ public interface BlockchainConstant {
     int CODE_FAIL_DUP_ORDER_ID       = 104;
     int CODE_WALLET_NOT_EXISTS       = 105;
     int CODE_FAIL_IO_PROBLEM         = 106;
+    int CODE_FAIL_SERVER             = 200;
     int CODE_FAIL_NOT_MY_WALLET      = -710;
     
     BigDecimal ETH_TO_WEI = BigDecimal.valueOf(1000000000000000000l);
@@ -103,6 +104,7 @@ public interface BlockchainConstant {
     String SYMBOL_ETC	= "ETC";
     String SYMBOL_CLO	= "CLO";
     String SYMBOL_BCH	= "BCH";
+    String SYMBOL_BSV	= "BSV";
     String SYMBOL_BTG	= "BTG";
     String SYMBOL_LTC	= "LTC";
     String SYMBOL_ADA	= "ADA";

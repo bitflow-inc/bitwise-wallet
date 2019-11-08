@@ -1,6 +1,23 @@
 package ai.bitflow.bitwise.wallet.services.abstracts;
 
-import ai.bitflow.bitwise.wallet.utils.Logger;
+import java.io.File;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.OperatingSystemMXBean;
+import java.util.List;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityTransaction;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.google.gson.Gson;
+
 import ai.bitflow.bitwise.wallet.constants.abstracts.BlockchainConstant;
 import ai.bitflow.bitwise.wallet.daos.BlockchainDao;
 import ai.bitflow.bitwise.wallet.domains.TbBlockchainMaster;
@@ -9,7 +26,11 @@ import ai.bitflow.bitwise.wallet.domains.TbTrans;
 import ai.bitflow.bitwise.wallet.gsonObjects.NewAddressResponse;
 import ai.bitflow.bitwise.wallet.gsonObjects.apiParameters.PersonalRequest;
 import ai.bitflow.bitwise.wallet.gsonObjects.apiParameters.SendToAddressRequest;
-import ai.bitflow.bitwise.wallet.gsonObjects.apiResponse.*;
+import ai.bitflow.bitwise.wallet.gsonObjects.apiResponse.DashboardResponse;
+import ai.bitflow.bitwise.wallet.gsonObjects.apiResponse.GetBalanceResponse;
+import ai.bitflow.bitwise.wallet.gsonObjects.apiResponse.GetErrorsResponse;
+import ai.bitflow.bitwise.wallet.gsonObjects.apiResponse.SendFromResponse;
+import ai.bitflow.bitwise.wallet.gsonObjects.apiResponse.ValidateAddressResponse;
 import ai.bitflow.bitwise.wallet.gsonObjects.common.SystemInfo;
 import ai.bitflow.bitwise.wallet.repositories.BlockchainMasterRepository;
 import ai.bitflow.bitwise.wallet.repositories.ErrorRepository;
@@ -19,49 +40,32 @@ import ai.bitflow.bitwise.wallet.services.interfaces.LockableAddress;
 import ai.bitflow.bitwise.wallet.services.interfaces.LockableWallet;
 import ai.bitflow.bitwise.wallet.services.interfaces.OwnChain;
 import ai.bitflow.bitwise.wallet.utils.ConvertUtil;
-import com.google.gson.Gson;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.springframework.transaction.annotation.Transactional;
-
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.EntityTransaction;
-import java.io.File;
-import java.lang.management.ManagementFactory;
-import java.lang.management.MemoryMXBean;
-import java.lang.management.OperatingSystemMXBean;
-import java.util.List;
+import ai.bitflow.bitwise.wallet.utils.Logger;
 
 /**
  * 
  * @author sungjoon.kim
  */
-public abstract class BlockchainCommonService implements
-        BlockchainConstant {
+@Service
+public abstract class BlockchainCommonService implements BlockchainConstant {
 
     // wallet properties
-    public abstract String getSymbol();
-    public abstract boolean isTestnet();
-    public abstract String getRpcUrl();
-    public abstract String getOwnerAddress();
-    public abstract int getDecimals();
     public abstract boolean isOwnerAddressExists();
     public abstract Object getTransaction(String uid, String txid);
     public abstract GetBalanceResponse getBalance(String address) throws Exception;
-
+    
     // open API functions for exchange
     public abstract NewAddressResponse newAddress(PersonalRequest req);
     public abstract ValidateAddressResponse validateAddress(PersonalRequest param);
+
     // sync tx
+    public abstract boolean openBlocksGetTxsThenSave();
     public abstract void beforeBatchSend();
     public abstract boolean sendOneTransaction(TbTrans datum);
     public abstract DashboardResponse getDashboardData();
     public abstract boolean updateTxConfirmCount();
     public abstract long getBestBlockCount() throws Exception;
-//    public abstract double getTotalBalance();
-
+    
     // 입출금 테이블
     @Autowired
     protected UserAddressRepository userAddresses;
@@ -116,13 +120,13 @@ public abstract class BlockchainCommonService implements
     public SendFromResponse requestSendTransaction(SendToAddressRequest req) {
       
         if (this instanceof BitcoinService && req.getFromAccount()==null) {
-            // 2018-07-25 sungjoon.kim 비트계열 출금어카운트를 유저어카운트로 변경
-            req.setFromAccount(((BitcoinService)this).getUserAccount());
+            // 비트계열 출금어카운트를 유저어카운트로 변경
+            req.setFromAccount("");
         } else if (req.getFromAddress()==null) {
-            req.setFromAddress(this.getOwnerAddress());
+            req.setFromAddress(blockchainDao.getOwnerAddress());
         }
-        if (SYMBOL_BCD.equals(getSymbol())) {
-            // sungjoon) BCD는 소수점 5자리 이하 송금 시 에러 발생하여 긴급 조치
+        if (SYMBOL_BCD.equals(blockchainDao.getSymbol())) {
+            // BCD는 소수점 5자리 이하 송금 시 에러 발생하여 조치
             req.setAmount((double)Math.floor(req.getAmount()*10000d)/10000d);
         }
         SendFromResponse ret = new SendFromResponse();
@@ -144,7 +148,7 @@ public abstract class BlockchainCommonService implements
      * @return
      */
     public List<TbTrans> getSendTXToUpdate() {
-        return getSendTXToUpdate(getSymbol());
+        return getSendTXToUpdate(blockchainDao.getSymbol());
     }
     
     /**
@@ -198,10 +202,10 @@ public abstract class BlockchainCommonService implements
     @Transactional
     public boolean syncBlockchainMaster() {
     	
-        TbBlockchainMaster master = blockchainDao.getBlockchainMaster(this);
+        TbBlockchainMaster master = blockchainDao.getBlockchainMaster();
         long startBlock = 0, bestBlock = 0;
         try {
-        	master.setDecimals(getDecimals());
+        	master.setDecimals(blockchainDao.getDecimals());
         	if (this instanceof OwnChain) {
 	            startBlock = master.getSyncHeight();
 	            if (startBlock<((OwnChain)this).getBlockStartFrom()) {

@@ -12,6 +12,8 @@ import ai.bitflow.bitwise.wallet.utils.ConvertUtil;
 import ai.bitflow.bitwise.wallet.utils.JsonRpcUtil;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.datatypes.Function;
@@ -29,36 +31,37 @@ import java.math.BigInteger;
  * 
  * @author sungjoon.kim
  */
-public abstract class ERC20AbstractService extends BlockchainCommonService
+@Service
+public abstract class ERC20Service extends BlockchainCommonService
 			implements EthereumConstant, LockableAddress {
 
 	public abstract String getContractaddr();
 	private BigInteger gasPrice;
 	
-	public EthereumService getPlatformService() {
-//		return (EthereumService) coinFactory.getService(SYMBOL_ETH);
-		return null;
-	}
-	public Web3j getWeb3j() { return getPlatformService().getWeb3j(); }
+	@Autowired
+	private EthereumService ethereumService;
 	
-	@Override public String getRpcUrl() {
-		return getPlatformService().getRpcUrl();
+	public EthereumService getPlatform() {
+		return ethereumService;
 	}
-	@Override public String getPp() {
-		return getPlatformService().getPp();
+	public Web3j getWeb3j() { return getPlatform().getWeb3j(); }
+	
+	@Override 
+	public String getPp() {
+		return getPlatform().getPp();
 	}
-	@Override public String getOwnerAddress() {
-		return getPlatformService().getOwnerAddress();
-	}
-    @Override public boolean isOwnerAddressExists() {
-    	return getPlatformService().isOwnerAddressExists();
+    @Override 
+    public boolean isOwnerAddressExists() {
+    	return getPlatform().isOwnerAddressExists();
     }
-	@Override public Object getTransaction(String uid, String txid) {
-		return getPlatformService().getTransaction(uid, txid);
+	@Override 
+	public Object getTransaction(String uid, String txid) {
+		return getPlatform().getTransaction(uid, txid);
 	}
 	@Transactional
-    @Override public void beforeBatchSend() {
-		gasPrice = getPlatformService().getGasPrice();
+    @Override 
+    public void beforeBatchSend() {
+		gasPrice = getPlatform().getGasPrice();
 	}
 	
 	@Transactional
@@ -99,7 +102,7 @@ public abstract class ERC20AbstractService extends BlockchainCommonService
 		log.info("SendOneTransaction", "Started");
 		try {
 			String fromaddr = (datum.getFromAddr()!=null && datum.getFromAddr().length() > 3) 
-					? datum.getFromAddr(): getOwnerAddress();
+					? datum.getFromAddr(): blockchainDao.getOwnerAddress();
 			String method = (datum.getFromAddr()==null||datum.getFromAddr().length()>3)
 					?ERC_TRANSFER_CODE:ERC_TRANSFERFROM_CODE;
 			String txId = transferWithDataField(method, fromaddr, datum.getToAddr(), 
@@ -137,7 +140,7 @@ public abstract class ERC20AbstractService extends BlockchainCommonService
 	 * @throws Exception
 	 */
 	public String transfer(String toaddr, double rawamount) throws Exception {
-		return transferWithDataField(ERC_TRANSFER_CODE, getOwnerAddress(), toaddr, rawamount);
+		return transferWithDataField(ERC_TRANSFER_CODE, blockchainDao.getOwnerAddress(), toaddr, rawamount);
 	}
 
 	public String transferFrom(String fromaddr, String toaddr, double rawamount) throws Exception {
@@ -157,7 +160,7 @@ public abstract class ERC20AbstractService extends BlockchainCommonService
 			dataField[1] = String.format("%64s", toaddr.substring(2)).replace(' ', '0');
 			
 			// token amount
-			String tokenAmtHex = ConvertUtil.tokenAmountToHex(rawAmount, getDecimals());
+			String tokenAmtHex = ConvertUtil.tokenAmountToHex(rawAmount, blockchainDao.getDecimals());
 			dataField[2] = String.format("%64s", tokenAmtHex).replace(' ', '0');
 
 			String data = dataField[0] + dataField[1] + dataField[2];
@@ -175,7 +178,7 @@ public abstract class ERC20AbstractService extends BlockchainCommonService
 			JSONArray paramArr = new JSONArray();
 			paramArr.put(params);
 
-			String resStr = JsonRpcUtil.sendJsonRpcJson(getRpcUrl(), METHOD_SENDFROMADDR,
+			String resStr = JsonRpcUtil.sendJsonRpcJson(blockchainDao.getRpcUrl(), METHOD_SENDFROMADDR,
 					paramArr);
 			BitcoinStringResponse res = gson.fromJson(resStr, BitcoinStringResponse.class);
 			String txId = res.getResult();
@@ -244,7 +247,7 @@ public abstract class ERC20AbstractService extends BlockchainCommonService
 	 */
 	@Transactional
     @Override public boolean updateTxConfirmCount() {
-		return getPlatformService().updateSendConfirm(getSymbol());
+		return getPlatform().updateSendConfirm(blockchainDao.getSymbol());
 	}
 
 	/**
@@ -256,7 +259,7 @@ public abstract class ERC20AbstractService extends BlockchainCommonService
 	}
 
 	@Override public ValidateAddressResponse validateAddress(PersonalRequest param) {
-		return getPlatformService().validateAddress(param);
+		return getPlatform().validateAddress(param);
 	}
 	
 	@Transactional
@@ -265,7 +268,7 @@ public abstract class ERC20AbstractService extends BlockchainCommonService
 //		if (prev.getResult().getAddress() != null) {
 //			return prev;
 //		}
-		NewAddressResponse ret = getPlatformService().newAddress(req);
+		NewAddressResponse ret = getPlatform().newAddress(req);
 //		TbUserAddress datum = new TbUserAddress(
 //				ret.getResult().getUid(), ret.getResult().getAddress());
 //		userAddresses.save(datum);
@@ -273,11 +276,11 @@ public abstract class ERC20AbstractService extends BlockchainCommonService
 	}
 
 	@Override public boolean walletpassphraseWithAddress(String address) {
-		return ((LockableAddress) getPlatformService()).walletpassphraseWithAddress(address);
+		return ((LockableAddress) getPlatform()).walletpassphraseWithAddress(address);
 	}
 
 	@Override public boolean walletlock(String address) {
-		return ((LockableAddress) getPlatformService()).walletlock(address);
+		return ((LockableAddress) getPlatform()).walletlock(address);
 	}
 
 }

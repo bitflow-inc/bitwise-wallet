@@ -1,25 +1,16 @@
 package ai.bitflow.bitwise.wallet.services.abstracts;
 
-import ai.bitflow.bitwise.wallet.constants.Bitcoin0170Constant;
-import ai.bitflow.bitwise.wallet.daos.BitcoinDao;
-import ai.bitflow.bitwise.wallet.domains.TbBlockchainMaster;
-import ai.bitflow.bitwise.wallet.domains.TbError;
-import ai.bitflow.bitwise.wallet.domains.TbTrans;
-import ai.bitflow.bitwise.wallet.domains.TbUserAddress;
-import ai.bitflow.bitwise.wallet.domains.primarykeys.PkTxidCategoryToAddr;
-import ai.bitflow.bitwise.wallet.gsonObjects.NewAddressResponse;
-import ai.bitflow.bitwise.wallet.gsonObjects.abstracts.RpcError;
-import ai.bitflow.bitwise.wallet.gsonObjects.apiParameters.PersonalRequest;
-import ai.bitflow.bitwise.wallet.gsonObjects.apiParameters.SendToAddressRequest;
-import ai.bitflow.bitwise.wallet.gsonObjects.apiResponse.*;
-import ai.bitflow.bitwise.wallet.gsonObjects.bitcoin.*;
-import ai.bitflow.bitwise.wallet.gsonObjects.common.AddressBalance;
-import ai.bitflow.bitwise.wallet.gsonObjects.common.BitcoinDoubleResponse;
-import ai.bitflow.bitwise.wallet.gsonObjects.common.BitcoinStringResponse;
-import ai.bitflow.bitwise.wallet.gsonObjects.common.SystemInfo;
-import ai.bitflow.bitwise.wallet.services.interfaces.OwnChain;
-import ai.bitflow.bitwise.wallet.services.interfaces.SendManyWallet;
-import ai.bitflow.bitwise.wallet.utils.JsonRpcUtil;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
+
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Utils;
@@ -31,31 +22,50 @@ import org.bitcoinj.wallet.DeterministicSeed;
 import org.bitcoinj.wallet.Wallet;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import ai.bitflow.bitwise.wallet.constants.Bitcoin0170Constant;
+import ai.bitflow.bitwise.wallet.daos.BitcoinDao;
+import ai.bitflow.bitwise.wallet.domains.TbBlockchainMaster;
+import ai.bitflow.bitwise.wallet.domains.TbError;
+import ai.bitflow.bitwise.wallet.domains.TbTrans;
+import ai.bitflow.bitwise.wallet.domains.TbUserAddress;
+import ai.bitflow.bitwise.wallet.domains.primarykeys.PkTxidCategoryToAddr;
+import ai.bitflow.bitwise.wallet.gsonObjects.NewAddressResponse;
+import ai.bitflow.bitwise.wallet.gsonObjects.abstracts.RpcError;
+import ai.bitflow.bitwise.wallet.gsonObjects.apiParameters.PersonalRequest;
+import ai.bitflow.bitwise.wallet.gsonObjects.apiParameters.SendToAddressRequest;
+import ai.bitflow.bitwise.wallet.gsonObjects.apiResponse.CreateWalletResponse;
+import ai.bitflow.bitwise.wallet.gsonObjects.apiResponse.DashboardResponse;
+import ai.bitflow.bitwise.wallet.gsonObjects.apiResponse.GetBalanceResponse;
+import ai.bitflow.bitwise.wallet.gsonObjects.apiResponse.GetBlockCountResponse;
+import ai.bitflow.bitwise.wallet.gsonObjects.apiResponse.ListWalletResponse;
+import ai.bitflow.bitwise.wallet.gsonObjects.apiResponse.SendToAddressResponse;
+import ai.bitflow.bitwise.wallet.gsonObjects.apiResponse.ValidateAddressResponse;
+import ai.bitflow.bitwise.wallet.gsonObjects.apiResponse.WalletAjaxResponse;
+import ai.bitflow.bitwise.wallet.gsonObjects.bitcoin.GetTransaction;
+import ai.bitflow.bitwise.wallet.gsonObjects.bitcoin.GetWalletInfo;
+import ai.bitflow.bitwise.wallet.gsonObjects.bitcoin.ListAddressGroupings;
+import ai.bitflow.bitwise.wallet.gsonObjects.bitcoin.ListSinceBlock;
+import ai.bitflow.bitwise.wallet.gsonObjects.bitcoin.ValidateAddress;
+import ai.bitflow.bitwise.wallet.gsonObjects.common.AddressBalance;
+import ai.bitflow.bitwise.wallet.gsonObjects.common.BitcoinDoubleResponse;
+import ai.bitflow.bitwise.wallet.gsonObjects.common.BitcoinStringResponse;
+import ai.bitflow.bitwise.wallet.gsonObjects.common.SystemInfo;
+import ai.bitflow.bitwise.wallet.services.interfaces.SendManyWallet;
+import ai.bitflow.bitwise.wallet.utils.JsonRpcUtil;
 
 
 /**
  * Bitcoin 계열 공통 services
  * @author sungjoon.kim
  */
-public abstract class BitcoinService extends BlockchainCommonService
-        implements Bitcoin0170Constant, OwnChain, SendManyWallet {
+@Service("bitcoinService")
+public class BitcoinService extends BlockchainCommonService
+        implements Bitcoin0170Constant, SendManyWallet {
   
-    public abstract String getRpcId();
-    public abstract String getRpcPw();
-    public abstract String getUserAccount();
-
     @Autowired
     private BitcoinDao bitcoinDao;
 
@@ -63,13 +73,13 @@ public abstract class BitcoinService extends BlockchainCommonService
 
     @Override
     public long getBestBlockCount() throws Exception {
-        return bitcoinDao.getBestBlockCount(this);
+        return bitcoinDao.getBestBlockCount();
     }
 
     public void getBlockchainData(Model model) {
-        model.addAttribute("symbol", getSymbol().toUpperCase());
-        model.addAttribute("networkType", isTestnet()?"Testnet":"Mainnet");
-        model.addAttribute("isTestnet", isTestnet());
+        model.addAttribute("symbol", blockchainDao.getSymbol().toUpperCase());
+        model.addAttribute("networkType", blockchainDao.isTestnet()?"Testnet":"Mainnet");
+        model.addAttribute("isTestnet", blockchainDao.isTestnet());
         boolean isDBCon = false;
         model.addAttribute("isDBCon", isDBCon);
     }
@@ -86,11 +96,11 @@ public abstract class BitcoinService extends BlockchainCommonService
      */
     public DashboardResponse getDashboardData() {
         DashboardResponse ret = new DashboardResponse();
-        long startCount = getBlockStartFrom();
+        long startCount = bitcoinDao.getBlockStartFrom();
         long bestCount = -1;
         String[] wallets = null;
         try {
-            bestCount = bitcoinDao.getBestBlockCount(this);
+            bestCount = bitcoinDao.getBestBlockCount();
             wallets = bitcoinDao.listwallets(this);
             ret.getResult().setWalletCount(wallets.length);
         } catch (Exception e) {
@@ -105,12 +115,18 @@ public abstract class BitcoinService extends BlockchainCommonService
                             bitcoinDao.getWalletInfo(this, item);
                     totalBalance += walletInfo.getResult().getBalance();
                 }
-            } catch (IOException e) {
-                log.error(METHOD_GETWALLETINFO, e.getMessage());
+            } catch (Exception e) {
+            	// RPC 연동 오류 시 여기서 NullPointerException 발생
+                log.error(METHOD_GETWALLETINFO, "RPC communication error"); // e.getMessage());
+                // TbBlockchainMaster에 상태 저장
+                bitcoinDao.setRpcError();
+                ret.setCode(CODE_FAIL_SERVER);
+                ret.setError("RPC communication error");
+                return ret;
             }
         }
         long syncCount = -1;
-        TbBlockchainMaster item = bitcoinDao.getBlockchainMaster(this);
+        TbBlockchainMaster item = bitcoinDao.getBlockchainMaster();
         if (item!=null) {
             syncCount = item.getSyncHeight();
         }
@@ -135,7 +151,7 @@ public abstract class BitcoinService extends BlockchainCommonService
         try {
             String[] walletnames = bitcoinDao.listwallets(this);
             List<ai.bitflow.bitwise.wallet.gsonObjects.objects.Wallet> wallets
-                    = new ArrayList<>();
+                    = new ArrayList<ai.bitflow.bitwise.wallet.gsonObjects.objects.Wallet>();
             for (String walletname : walletnames) {
                 // 잔고조회 + walletlock 체크
                 // listaddressgroupings
@@ -161,7 +177,7 @@ public abstract class BitcoinService extends BlockchainCommonService
         GetWalletInfo ret = null;
         try {
             ret = bitcoinDao.getWalletInfo(this, uid);
-            List<String> addresses = bitcoinDao.getAllAddressListFromNode(this, uid);
+            List<String> addresses = bitcoinDao.getAllAddressListFromNode(uid);
             ret.getResult().setAddresses(addresses);
             ret.getResult().setAddressCount(addresses.size());
         } catch (Exception e) {
@@ -186,7 +202,7 @@ public abstract class BitcoinService extends BlockchainCommonService
     public GetBlockCountResponse getBlockCount() {
         GetBlockCountResponse ret = new GetBlockCountResponse();
         try {
-            ret.setResult(bitcoinDao.getBestBlockCount(this));
+            ret.setResult(bitcoinDao.getBestBlockCount());
         } catch (Exception e) {
             ret.setError("" + e.getMessage());
             TbError item = new TbError(METHOD_GETBLOCKCOUNT, e);
@@ -246,7 +262,7 @@ public abstract class BitcoinService extends BlockchainCommonService
     public CreateWalletResponse createDeterministicWallet(String uid, String passphrase) {
         CreateWalletResponse ret = new CreateWalletResponse();
         NetworkParameters params = null;
-        if (isTestnet()) {
+        if (blockchainDao.isTestnet()) {
             params = TestNet3Params.get();
         } else {
             params = MainNetParams.get();
@@ -314,9 +330,9 @@ public abstract class BitcoinService extends BlockchainCommonService
 
         try {
 	    	bitcoinDao.walletpassphraseshort(this);
-    	    resStr = JsonRpcUtil.sendJsonRpcBasicAuth(getRpcUrl()
+    	    resStr = JsonRpcUtil.sendJsonRpcBasicAuth(blockchainDao.getRpcUrl()
                     + req.getUid(), METHOD_NEWADDR, params,
-                    getRpcId(), getRpcPw());
+                    blockchainDao.getRpcId(), blockchainDao.getRpcPw());
     	    log.info(METHOD_NEWADDR, resStr);
     	    res = gson.fromJson(resStr, BitcoinStringResponse.class);
     	    if (res.getError()!=null) {
@@ -358,9 +374,9 @@ public abstract class BitcoinService extends BlockchainCommonService
     	params[0] = "\"" + ret.getResult().getAddress() + "\"";
     	ValidateAddress res = null;
     	try {
-    	    resStr = JsonRpcUtil.sendJsonRpcBasicAuth(getRpcUrl(),
+    	    resStr = JsonRpcUtil.sendJsonRpcBasicAuth(blockchainDao.getRpcUrl(),
                     METHOD_VALIDATEADDRESS, params,
-    	    		getRpcId(), getRpcPw());
+                    blockchainDao.getRpcId(), blockchainDao.getRpcPw());
     	    res = gson.fromJson(resStr, ValidateAddress.class);
     	    log.info(METHOD_VALIDATEADDRESS, resStr);
     	    if (res.getError()!=null) {
@@ -388,15 +404,15 @@ public abstract class BitcoinService extends BlockchainCommonService
     	params[0] = "\"" + txid + "\"";
         GetTransaction res = null;
     	try {
-            String resStr = JsonRpcUtil.sendJsonRpcBasicAuth(getRpcUrl() + uid,
-                    METHOD_GETTRANSACTION, params, getRpcId(),
-                    getRpcPw());
+            String resStr = JsonRpcUtil.sendJsonRpcBasicAuth(blockchainDao.getRpcUrl() + uid,
+                    METHOD_GETTRANSACTION, params, blockchainDao.getRpcId(),
+                    blockchainDao.getRpcPw());
             res = gson.fromJson(resStr, GetTransaction.class);
             if (res.getError()!=null) {
                 TbError item = new TbError(METHOD_GETTRANSACTION,
                         res.getError().getCode(), res.getError().getMessage());
                 error.save(item);
-            } else if (res.getResult().getConfirmations()< getMinConfirm()) {
+            } else if (res.getResult().getConfirmations()< bitcoinDao.getMinConfirm()) {
                 res.getResult().setStatus('P');
             } else {
                 res.getResult().setStatus('Y');
@@ -487,7 +503,7 @@ public abstract class BitcoinService extends BlockchainCommonService
     @Override
     public boolean openBlocksGetTxsThenSave() {
       
-        TbBlockchainMaster master = bitcoinDao.getBlockchainMaster(this);
+        TbBlockchainMaster master = bitcoinDao.getBlockchainMaster();
         long startBlockNo = master.getSyncHeight();
         long bestBlockNo = master.getBestHeight();
 
@@ -509,96 +525,110 @@ public abstract class BitcoinService extends BlockchainCommonService
             }
 
             // 모든 월렛명 가져오기
+            if (bitcoinDao.multiWalletSupport()) {
+            	
+            }
             String[] uidStrArr = null;
             try {
                 uidStrArr = bitcoinDao.listwallets(this);
-//                TbUserAddress address = new TbUserAddress();
             } catch (Exception e) {
                 TbError item = new TbError(METHOD_LISTWALLETS, e);
                 error.save(item);
                 return false;
             }
 
-            List<TbTrans> trans = new ArrayList<>();
-            // 월렛마다 반복
-            for (String uidStr : uidStrArr) {
-                // 최근 동기화 블럭 인덱스 부터 최근까지 트랜잭션 반환
-                ListSinceBlock.Result.Transaction[] txs = null;
-                try {
-                    ListSinceBlock res1 = bitcoinDao.listSinceBlock(
-                            this, uidStr, startBlockHash);
-                    txs = res1.getResult().getTransactions();
-                } catch (Exception e) {
-                    TbError item = new TbError(METHOD_LISTSINCEBLOCK, e);
-                    error.save(item);
-                    return false;
-                }
-
-                if (txs== null || txs.length < 1) { continue; }
-
-                // 거래건이 있으면 WALLET트랜잭션 반복해서 SEND/RECEIVE인지 판단한 뒤 저장
-                try {
-                    for (ListSinceBlock.Result.Transaction tx : txs) {
-                        // 마지막 동기화 블럭 이후의 모든 (나의) 트랜잭션 반복
-                        double amount = Math.abs(tx.getAmount());
-                        long time = tx.getTime();
-                        long confirm = tx.getConfirmations();
-                        String txid = tx.getTxid();
-                        String address = tx.getAddress();
-                        String category = tx.getCategory();
-//                            String account   = tx.getLabel();
-//                            Long blockid     = getBlockHeight(tx.getBlockhash());
-                        log.debug("tx toString()", tx.toString());
-                        // 입출금 공통 처리
-                        PkTxidCategoryToAddr id = new PkTxidCategoryToAddr(txid, category);
-                        Optional<TbTrans> rawtrans = transactions.findById(id);
-                        TbTrans item = null;
-                        if (rawtrans.isPresent()) {
-                            item = rawtrans.get();
-                        } else {
-                            item = new TbTrans(category, txid,
-                                    uidStr, address, amount);
-                        }
-                        if (time>0) {
-                            item.setTxTime(time);
-                        }
-                        item.setConfirm(confirm);
-                        if (CATEGORY_SEND.equals(category)) {
-                            // 1) 출금처리 START >> send의 경우만 fee와 abandoned가 존재
-                            item.setFee(Math.abs(tx.getFee()));
-                            if (tx.isAbandoned()) { item.setError(MSG_SEND_ABANDONED); }
-                            // 출금처리 END
-                        } else if (CATEGORY_RECEIVE.equals(tx.getCategory())) {
-                            // 2) 입금처리 START >> coinbase 마이닝 되는 경우 간헐적 존재
-                            // 입금처리 END
-                        }
-                        item.setUid(uidStr);
-                        trans.add(item);
-                    }
-                    // tx array loop end
-                } catch (Exception e) {
-                    TbError item = new TbError("ExtractingTXs", e);
-                    error.save(item);
-                    return false;
-                }
-            }
-            // 월렛 반복 END
-            EntityManager em = emf.createEntityManager();
-            EntityTransaction etx = em.getTransaction();
+            List<TbTrans> totalTXs = new ArrayList<TbTrans>();
             try {
-                etx.begin();
-                transactions.saveAll(trans);
-                master.setSyncHeight(bestBlockNo);
-                blockchainMaster.save(master);
-                etx.commit();
-                log.info("SYNC", "finished at " + bestBlockNo);
+	            if (uidStrArr!=null) {
+	            	// 월렛마다 반복
+		            for (String uidStr : uidStrArr) {
+		            	totalTXs.addAll(getTransactionsFromSingleWallet(startBlockHash, uidStr));
+		            }
+		            // 월렛 반복 END
+	            } else {
+	            	totalTXs.addAll(getTransactionsFromSingleWallet(startBlockHash, ""));
+	            }
             } catch (Exception e) {
-                etx.rollback();
-            } finally {
-                em.close();
+            	TbError item = new TbError(METHOD_LISTSINCEBLOCK, e);
+                error.save(item);
             }
+
+            if (totalTXs!=null && totalTXs.size()>0) {
+	            EntityManager em = emf.createEntityManager();
+	            EntityTransaction etx = em.getTransaction();
+	            try {
+	                etx.begin();
+	                transactions.saveAll(totalTXs);
+	                master.setSyncHeight(bestBlockNo);
+	                blockchainMaster.save(master);
+	                etx.commit();
+	                log.info("SYNC", "finished at " + bestBlockNo);
+	            } catch (Exception e) {
+	                etx.rollback();
+	            } finally {
+	                em.close();
+	            }
+            }
+            
             return true;
         }
+    }
+    
+    /**
+     * 
+     * @param startBlockHash
+     * @param uidStr
+     * @return
+     */
+    private List<TbTrans> getTransactionsFromSingleWallet(String startBlockHash, String uidStr) throws Exception {
+    	List<TbTrans> ret = new ArrayList<TbTrans>();
+    	// 최근 동기화 블럭 인덱스 부터 최근까지 트랜잭션 반환
+        ListSinceBlock.Result.Transaction[] txs = null;
+        ListSinceBlock res1 = bitcoinDao.listSinceBlock(this, uidStr, startBlockHash);
+        txs = res1.getResult().getTransactions();
+
+        if (txs== null || txs.length < 1) { return ret; }
+
+        // 거래건이 있으면 WALLET트랜잭션 반복해서 SEND/RECEIVE인지 판단한 뒤 저장
+        for (ListSinceBlock.Result.Transaction tx : txs) {
+            // 마지막 동기화 블럭 이후의 모든 (나의) 트랜잭션 반복
+            double amount = Math.abs(tx.getAmount());
+            long time = tx.getTime();
+            long confirm = tx.getConfirmations();
+            String txid = tx.getTxid();
+            String address = tx.getAddress();
+            String category = tx.getCategory();
+//                            String account   = tx.getLabel();
+//                            Long blockid     = getBlockHeight(tx.getBlockhash());
+            log.debug("tx toString()", tx.toString());
+            // 입출금 공통 처리
+            PkTxidCategoryToAddr id = new PkTxidCategoryToAddr(bitcoinDao.getSymbol(), txid, category);
+            Optional<TbTrans> rawtrans = transactions.findById(id);
+            TbTrans item = null;
+            if (rawtrans.isPresent()) {
+                item = rawtrans.get();
+            } else {
+                item = new TbTrans(category, txid,
+                        uidStr, address, amount);
+            }
+            if (time>0) {
+                item.setTxTime(time);
+            }
+            item.setConfirm(confirm);
+            if (CATEGORY_SEND.equals(category)) {
+                // 1) 출금처리 START >> send의 경우만 fee와 abandoned가 존재
+                item.setFee(Math.abs(tx.getFee()));
+                if (tx.isAbandoned()) { item.setError(MSG_SEND_ABANDONED); }
+                // 출금처리 END
+            } else if (CATEGORY_RECEIVE.equals(tx.getCategory())) {
+                // 2) 입금처리 START >> coinbase 마이닝 되는 경우 간헐적 존재
+                // 입금처리 END
+            }
+            item.setUid(uidStr);
+            ret.add(item);
+        }
+        // tx array loop end
+        return ret;
     }
 
     /**
@@ -616,8 +646,8 @@ public abstract class BitcoinService extends BlockchainCommonService
         // 노드에 전송 요청
         BitcoinStringResponse res = null;
         try {
-            String resStr = JsonRpcUtil.sendJsonRpcBasicAuth(getRpcUrl(),
-                    METHOD_SENDTOADDRESS, params, getRpcId(), getRpcPw());
+            String resStr = JsonRpcUtil.sendJsonRpcBasicAuth(blockchainDao.getRpcUrl(),
+                    METHOD_SENDTOADDRESS, params, blockchainDao.getRpcId(), blockchainDao.getRpcPw());
             res = gson.fromJson(resStr, BitcoinStringResponse.class);
             if (res.getError()!=null) {
                 // Ex) "error": {"code":-4, "message":"Transaction amount too small"},
@@ -651,7 +681,7 @@ public abstract class BitcoinService extends BlockchainCommonService
             // {"result":null,"error":{"code":-18,"message":"Requested wallet does not exist or is not loaded"},"id":1}
         }
 
-        List<AddressBalance> list = new ArrayList<>();
+        List<AddressBalance> list = new ArrayList<AddressBalance>();
         if (wallet.getResult()!=null) {
             res.getResult().setBalance(wallet.getResult().getBalance());
             res.getResult().setUnconfirmedBalance(
@@ -662,7 +692,7 @@ public abstract class BitcoinService extends BlockchainCommonService
 	                    Object[] raw = balances.getResult()[j][i];
 	                    AddressBalance item = new AddressBalance();
 	                    item.setAddress((String) raw[0]);
-	                    item.setBalance((double) raw[1]);
+	                    item.setBalance((Double) raw[1]);
 	                    log.debug("arr", item.toString());
 	                    list.add(item);
 	                }
@@ -693,7 +723,7 @@ public abstract class BitcoinService extends BlockchainCommonService
                     error.save(item);
                     success = false;
                 } else {
-                    if (res.getResult().getConfirmations()>= getMinConfirm()) {
+                    if (res.getResult().getConfirmations()>= bitcoinDao.getMinConfirm()) {
                         // 완료처리해야 할 것 있는지 조회
                         datum.setNotiCnt(NOTI_CNT_FINISHED);
                         notify = true;
