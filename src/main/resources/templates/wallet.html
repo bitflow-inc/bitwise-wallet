@@ -32,9 +32,9 @@
               </thead>
               <tbody id="wallet-rows">
                 <tr th:each="item : ${wallets.getWalletnames()}" th:attr="id=${'tr-wallet-' + item}">
-                  <td class="text-center">&nbsp;</td>
+                  <td class="text-center">BFT-TST-001</td>
                   <td class="text-center">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" th:text="${item==''?'&nbsp;':item}"
+                    <button type="button" class="btn btn-outline-secondary btn-sm btn-walletname" th:text="${item==''?'&nbsp;':item}"
                             th:attr="data-wallet=${item}" onclick="getaddressinfo(this)"></button>
                   </td>
 <!--                  <td class="text-center">&nbsp;</td>-->
